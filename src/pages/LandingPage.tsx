@@ -1,523 +1,367 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Zap, Shield, Brain, Swords, Timer, Users, ArrowRight, Play, ChevronDown, Sparkles } from 'lucide-react';
-import { Navbar } from '../components/Navbar';
-import { LiquidEther } from '../components/LiquidEther';
-import { Hero3DScene } from '../components/Hero3DScene';
-import { CTAButton } from '../components/CTAButton';
-import { FeatureCard } from '../components/FeatureCard';
-import { DuelPreview } from '../components/DuelPreview';
-import { LeaderboardPreview } from '../components/LeaderboardPreview';
-import { SectionWrapper } from '../components/SectionWrapper';
-import { AnimatedCounter } from '../components/AnimatedCounter';
-import { LiveTicker } from '../components/LiveTicker';
-import { BackgroundElements } from '../components/BackgroundElements';
-import { MatrixRain, GlitchText, NeonDivider, SectionTag } from '../components/HackerFX';
-import { DotLottiePlayer } from '@dotlottie/react-player';
-
-const features = [
-  {
-    icon: <Swords className="w-6 h-6 text-primary-container" />,
-    title: 'Real-Time 1v1 Duels',
-    description: 'Face off in live coding battles. Every keystroke synced — no lag, no mercy.',
-  },
-  {
-    icon: <Brain className="w-6 h-6 text-secondary-fixed" />,
-    title: 'AI Post-Match Review',
-    description: 'AI dissects both solutions — complexity, quality, and battle-hardened insights.',
-  },
-  {
-    icon: <Timer className="w-6 h-6 text-tertiary-container" />,
-    title: 'Timed Pressure Arena',
-    description: '30-minute countdown. Solve faster, solve cleaner. The clock is your enemy.',
-  },
-  {
-    icon: <Shield className="w-6 h-6 text-primary-container" />,
-    title: 'ELO-Based Matchmaking',
-    description: 'Skill-based matching ensures every duel is genuinely competitive. Climb the ranks.',
-  },
-  {
-    icon: <Users className="w-6 h-6 text-secondary-fixed" />,
-    title: 'Spectator Mode',
-    description: 'Watch elite matches live. Both editors synced in real-time. Learn from the best.',
-  },
-  {
-    icon: <Zap className="w-6 h-6 text-tertiary-container" />,
-    title: 'Multi-Language Support',
-    description: 'JS, Python, C++, or Java. Judge0 validates against hidden test cases instantly.',
-  },
-];
-
-const TypewriterText: React.FC<{ text: string; delay?: number }> = ({ text, delay = 0 }) => {
-  const [displayText, setDisplayText] = useState('');
-  const [showCursor, setShowCursor] = useState(true);
-
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    const timer = setTimeout(() => {
-      let i = 0;
-      interval = setInterval(() => {
-        if (i <= text.length) {
-          setDisplayText(text.slice(0, i));
-          i++;
-        } else {
-          clearInterval(interval);
-        }
-      }, 35);
-    }, delay);
-    return () => {
-      clearTimeout(timer);
-      if (interval) clearInterval(interval);
-    };
-  }, [text, delay]);
-
-  useEffect(() => {
-    const cursorInterval = setInterval(() => setShowCursor(p => !p), 500);
-    return () => clearInterval(cursorInterval);
-  }, []);
-
-  return (
-    <span>
-      {displayText}
-      {showCursor && <span className="text-primary-container">|</span>}
-    </span>
-  );
-};
-
-const STATS = [
-  { label: 'Matches Today', value: 8204, suffix: '' },
-  { label: 'Active Duels', value: 142, prefix: '◆ ' },
-  { label: 'Top ELO', value: 2840, suffix: '' },
-];
-
-/* Animated terminal log lines in hero */
-const LOG_LINES = [
-  { text: 'Initializing arena system...', delay: 400, color: '#94a3b8' },
-  { text: 'Connected to matchmaking server', delay: 1000, color: '#4ade80' },
-  { text: 'Loading Judge0 runtime [v1.13.0]', delay: 1800, color: '#94a3b8' },
-  { text: 'System online — 1,420 operators active', delay: 2600, color: '#00e5ff' },
-];
-
-function TerminalBoot() {
-  return (
-    <div className="mt-10 bg-surface-container-low/60 backdrop-blur-md border border-outline-variant/20 px-5 py-4 font-code text-xs max-w-md shadow-2xl relative group overflow-hidden">
-      <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-outline-variant/10">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-[1px] bg-primary-container" />
-          <span className="text-green-400 tracking-[0.3em] text-meta">System Boot Sequence</span>
-        </div>
-      </div>
-      {LOG_LINES.map((line, i) => (
-        <AnimatedLogLine key={i} {...line} />
-      ))}
-    </div>
-  );
-}
-
-function AnimatedLogLine({ text, delay, color }: { text: string; delay: number; color: string }) {
-  const [shown, setShown] = useState(false);
-  const [typed, setTyped] = useState('');
-
-  useEffect(() => {
-    const t = setTimeout(() => setShown(true), delay);
-    return () => clearTimeout(t);
-  }, [delay]);
-
-  useEffect(() => {
-    if (!shown) return;
-    let i = 0;
-    const id = setInterval(() => {
-      setTyped(text.slice(0, i));
-      i++;
-      if (i > text.length) clearInterval(id);
-    }, 28);
-    return () => clearInterval(id);
-  }, [shown, text]);
-
-  if (!shown) return null;
-  return (
-    <div className="flex items-center gap-2 leading-6" style={{ color }}>
-      <span className="text-outline-variant/60">$</span>
-      <span>{typed}</span>
-      {typed.length < text.length && (
-        <span className="inline-block w-1.5 h-3.5 bg-current animate-blink" />
-      )}
-    </div>
-  );
-}
 
 export default function LandingPage() {
-  const navigate = useNavigate();
-  const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.95]);
+    const navigate = useNavigate();
 
-  return (
-    <div className="relative min-h-screen bg-background text-on-surface overflow-x-hidden">
-      {/* Persistent Visual Effects */}
-      <LiquidEther />
-      <BackgroundElements />
-      <Navbar onEnterArena={() => navigate('/app')} />
-
-      {/* ─────── HERO SECTION ─────── */}
-      <motion.section
-        style={{ opacity: heroOpacity, scale: heroScale }}
-        className="relative min-h-screen flex items-center overflow-hidden"
-      >
-        <Hero3DScene />
-        <MatrixRain className="z-[1]" opacity={0.06} />
-
-        {/* Scan line sweep overlay */}
-        <div className="absolute inset-0 z-[2] pointer-events-none overflow-hidden">
-          <motion.div
-            animate={{ top: ['-5%', '105%'] }}
-            transition={{ duration: 10, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
-            className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary-container/20 to-transparent shadow-[0_0_15px_rgba(0,229,255,0.2)]"
-          />
-        </div>
-
-        <div className="relative z-10 max-w-[1600px] mx-auto px-6 md:px-12 pt-32 pb-20 w-full">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-              className="max-w-3xl flex-1 shrink-0"
-            >
-              {/* Status badge */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-                className="inline-flex items-center gap-3 border border-primary-container/20 bg-primary-container/5 px-4 py-2 mb-10 clip-angle"
-              >
-                <div className="flex flex-col gap-6 items-start">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-meta">
-                      System Online — <AnimatedCounter end={1420} suffix=" Active Coders" className="inline text-meta" />
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Dynamic Headline */}
-              <h1 className="font-display font-black leading-none tracking-tighter mb-8">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.7 }}
-                  className="text-5xl md:text-7xl xl:text-8xl text-white mb-2"
-                >
-                  CODE.
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.55, duration: 0.7 }}
-                  className="text-5xl md:text-7xl xl:text-8xl"
-                >
-                  <span className="text-gradient-cyan [text-shadow:0_0_40px_rgba(0,229,255,0.4)]">
-                    BATTLE.
-                  </span>
-                </motion.div>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7, duration: 0.7 }}
-                  className="text-5xl md:text-7xl xl:text-8xl text-white"
-                >
-                  DOMINATE.
-                </motion.div>
-              </h1>
-
-              {/* Terminal-style description */}
-              <div className="font-body text-on-surface-variant text-lg md:text-xl leading-relaxed max-w-xl mb-12">
-                <span className="text-primary-container font-code text-sm mr-2">&gt;</span>
-                <TypewriterText text="Real-time multiplayer coding duels. Face an opponent, solve same problem, let your code speak." delay={800} />
-              </div>
-
-              {/* CTAs */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1, duration: 0.5 }}
-                className="flex flex-wrap gap-4 items-center"
-              >
-                <CTAButton onClick={() => navigate('/app')} variant="glow" size="lg" icon={<Zap className="w-5 h-5 fill-current" />}>
-                  Enter the Arena
-                </CTAButton>
-                <CTAButton variant="secondary" onClick={() => navigate('/watch/demo')} size="lg" icon={<Play className="w-4 h-4 fill-current" />}>
-                  Watch Live Match
-                </CTAButton>
-              </motion.div>
-
-              {/* Terminal sequence */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-                className="hidden md:block"
-              >
-                <TerminalBoot />
-              </motion.div>
-
-              {/* Match Stats */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.5 }}
-                className="flex gap-10 mt-16 pt-8 border-t border-outline-variant/10"
-              >
-                <div>
-                  <h3 className="text-3xl font-display font-bold text-white tracking-tight">2.4k+</h3>
-                  <p className="text-meta mt-1">
-                    Duels Daily
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-3xl font-display font-bold text-white tracking-tight">150+</h3>
-                  <p className="text-meta mt-1 font-medium">
-                    Challenges
-                  </p>
-                </div>
-                <div className="absolute -left-2 top-0 py-4 h-full w-[1px] bg-primary-container/20 group-hover:bg-primary-container/50 transition-colors" />
-              </motion.div>
-            </motion.div>
+    return (
+        <div className="bg-[#0a0e14] text-[#f1f3fc] font-[Inter] overflow-x-hidden selection:bg-[#c799ff] selection:text-[#440080]">
+            <style>{`
+                .font-headline { font-family: 'Space Grotesk', sans-serif; }
+                .font-mono { font-family: 'JetBrains Mono', monospace; }
+                .glow-sm { text-shadow: 0 0 8px rgba(74, 248, 227, 0.4); }
+                .glow-primary { box-shadow: 0 0 20px rgba(199, 153, 255, 0.2); }
+                .glass-panel { backdrop-filter: blur(12px); background: rgba(21, 26, 33, 0.7); }
+                .scrollbar-hide::-webkit-scrollbar { display: none; }
+                @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+                .animate-marquee { display: inline-block; animation: marquee 30s linear infinite; }
+            `}</style>
             
-            {/* 3D/Lottie Animation Centerpiece */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, rotateX: 20 }}
-              animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-              transition={{ delay: 0.5, duration: 1.2, ease: 'easeOut' }}
-              className="hidden lg:block flex-1 w-full max-w-xl xl:max-w-2xl relative shrink select-none"
-            >
-              <div className="absolute inset-0 bg-primary-container/5 rounded-full blur-[120px] pointer-events-none" />
-              <DotLottiePlayer
-                src="/coding-animation.lottie"
-                autoplay
-                loop
-                style={{ width: '100%', height: 'auto', maxHeight: '640px' }}
-              />
-            </motion.div>
-          </div>
+
+<nav className="fixed top-0 w-full z-50 bg-[#131313]/80 backdrop-blur-xl shadow-[0_40px_40px_rgba(0,0,0,0.06)]">
+<div className="flex justify-between items-center max-w-7xl mx-auto px-6 h-16">
+<div className="flex items-center gap-8">
+<div className="text-xl font-bold tracking-tighter text-[#adc6ff] dark:text-[#adc6ff] cursor-pointer flex items-center gap-2" onClick={() => navigate('/')}>
+<span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>terminal</span>
+                    DEVDUEL
+                </div>
+<div className="hidden md:flex gap-6 font-['Inter'] font-medium text-sm tracking-tight">
+<button onClick={() => navigate('/arena/demo')} className="text-[#adc6ff] border-b-2 border-[#adc6ff] pb-1 cursor-pointer transition-transform active:scale-95">Arena</button>
+<button onClick={() => navigate('/watch/demo')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Rankings</button>
+<button onClick={() => navigate('/docs')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Docs</button>
+<button onClick={() => navigate('/app')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Compete</button>
+</div>
+</div>
+<div className="flex items-center gap-4">
+<div className="hidden sm:flex gap-4 items-center mr-4">
+<button onClick={() => navigate('/app')} className="material-symbols-outlined text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors cursor-pointer">terminal</button>
+<button onClick={() => navigate('/profile')} className="material-symbols-outlined text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors cursor-pointer">settings</button>
+</div>
+<button onClick={() => navigate('/app')} className="bg-gradient-to-v from-primary to-primary-container text-on-primary px-5 py-1.5 rounded-lg text-sm font-bold tracking-tight active:scale-95 transition-transform">
+                    Get Started
+                </button>
+</div>
+</div>
+</nav>
+
+<main className="relative pt-32 pb-20 overflow-hidden min-h-screen flex flex-col justify-center">
+
+<div className="absolute inset-0 obsidian-grid opacity-30 -z-10"></div>
+<div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] -z-10 animate-pulse"></div>
+<div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-tertiary/5 rounded-full blur-[120px] -z-10"></div>
+<div className="max-w-7xl mx-auto px-6 w-full grid lg:grid-cols-2 gap-12 items-center">
+<div className="z-10">
+<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant/15 mb-6">
+<span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span className="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant">DevDuelARENA_v2.6.4_STABLE</span>
+</div>
+<h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8 text-on-surface">
+                    CODE.<br/>BATTLE.<br/><span className="text-primary">DOMINATE.</span>
+</h1>
+<p className="text-xl text-on-surface-variant max-w-lg mb-10 leading-relaxed">
+                    The elite competitive programming arena for serious engineers. Real-time head-to-head syntax battles with sub-ms latency.
+                </p>
+<div className="flex flex-wrap gap-4">
+<button onClick={() => navigate('/arena/demo')} className="bg-primary hover:bg-primary/90 text-on-primary px-8 py-4 rounded-lg font-bold transition-all flex items-center gap-3 active:scale-95 shadow-lg shadow-primary/20">
+                        ENTER THE ARENA <span className="material-symbols-outlined">bolt</span>
+</button>
+<button onClick={() => navigate('/watch/demo')} className="bg-surface-container-high border border-outline-variant/20 hover:bg-surface-container-highest text-on-surface px-8 py-4 rounded-lg font-bold transition-all active:scale-95">
+                        VIEW RANKINGS
+                    </button>
+</div>
+
+<div className="mt-16 flex gap-12 border-t border-outline-variant/10 pt-8">
+<div>
+<div className="text-2xl font-bold mono">1,420</div>
+<div className="text-[10px] uppercase tracking-widest text-on-surface-variant mono">Live Sessions</div>
+</div>
+<div>
+<div className="text-2xl font-bold mono text-tertiary">460</div>
+<div className="text-[10px] uppercase tracking-widest text-on-surface-variant mono">Active Coders</div>
+</div>
+<div>
+<div className="text-2xl font-bold mono">99.9%</div>
+<div className="text-[10px] uppercase tracking-widest text-on-surface-variant mono">Uptime</div>
+</div>
+</div>
+</div>
+
+<div className="perspective-container hidden lg:block">
+<div className="terminal-3d glass-panel rounded-xl overflow-hidden shadow-2xl relative">
+<div className="bg-surface-container-highest px-4 py-3 flex items-center justify-between border-b border-outline-variant/10">
+<div className="flex gap-2">
+<div className="w-2.5 h-2.5 rounded-full bg-error/40"></div>
+<div className="w-2.5 h-2.5 rounded-full bg-secondary-container"></div>
+<div className="w-2.5 h-2.5 rounded-full bg-tertiary/40"></div>
+</div>
+<div className="text-[10px] font-mono text-on-surface-variant tracking-widest">DUEL_VS_KRONOS_X.PY</div>
+<div className="w-12"></div>
+</div>
+<div className="p-6 font-mono text-sm leading-relaxed min-h-[400px] bg-surface-container-lowest">
+<div className="flex gap-4">
+<span className="text-on-surface-variant/30 select-none">01</span>
+<span><span className="text-tertiary">def</span> <span className="text-primary">solve_binary_tree</span>(root):</span>
+</div>
+<div className="flex gap-4 bg-primary-container/10 border-l-2 border-primary">
+<span className="text-on-surface-variant/30 select-none">02</span>
+<span>    <span className="text-on-surface-variant"># Analyzing path complexity...</span></span>
+</div>
+<div className="flex gap-4">
+<span className="text-on-surface-variant/30 select-none">03</span>
+<span>    queue = [(root, <span className="text-primary">0</span>)]</span>
+</div>
+<div className="flex gap-4">
+<span className="text-on-surface-variant/30 select-none">04</span>
+<span>    <span className="text-tertiary">while</span> queue:</span>
+</div>
+<div className="flex gap-4">
+<span className="text-on-surface-variant/30 select-none">05</span>
+<span>        node, level = queue.<span className="text-primary">pop</span>(<span className="text-primary">0</span>)</span>
+</div>
+
+<div className="absolute bottom-8 right-8 w-48 glass-panel p-4 rounded-lg animate-pulse border-primary/30">
+<div className="text-[9px] uppercase tracking-tighter text-primary mb-2">AI Analysis Overlay</div>
+<div className="h-1 bg-surface-variant rounded-full overflow-hidden mb-2">
+<div className="h-full bg-primary w-2/3"></div>
+</div>
+<div className="text-[10px] text-on-surface-variant">Complexity: O(N)</div>
+<div className="text-[10px] text-tertiary">Efficiency: 98%</div>
+</div>
+
+<div className="absolute top-20 right-[-20px] bg-tertiary text-on-tertiary px-3 py-1 rounded-sm text-[10px] font-bold shadow-xl rotate-12">
+                            SYNC: 4ms
+                        </div>
+</div>
+</div>
+</div>
+</div>
+
+<div className="mt-20 border-y border-outline-variant/10 bg-surface-container-low/50 py-3 overflow-hidden whitespace-nowrap">
+<div className="flex animate-marquee gap-12 font-mono text-xs text-on-surface-variant/80">
+<span>&gt; ZER0_DAY defeated SYNTAX_ERROR 2s ago</span>
+<span className="text-tertiary">&gt; ALGO_GOD gained +25 ELO 8s ago</span>
+<span>&gt; NEW_CHALLENGE: Binary Tree Reversal (Hard) started 15s ago</span>
+<span>&gt; SYSTEM: v2.4.0 Deployment Successful</span>
+<span className="text-primary">&gt; ARENA_MASTER currently on 12-win streak</span>
+<span>&gt; ZER0_DAY defeated SYNTAX_ERROR 2s ago</span>
+<span className="text-tertiary">&gt; ALGO_GOD gained +25 ELO 8s ago</span>
+</div>
+</div>
+</main>
+
+<section className="py-24 bg-surface px-6">
+<div className="max-w-7xl mx-auto">
+<div className="mb-16">
+<h2 className="text-4xl font-bold tracking-tight mb-4">Core Systems</h2>
+<p className="text-on-surface-variant max-w-xl">Precision-engineered runtime for zero-latency competitive execution.</p>
+</div>
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+<div className="surface-container-low p-8 rounded-xl border border-outline-variant/5 hover:border-primary/20 transition-all group">
+<div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 text-primary">
+<span className="material-symbols-outlined">timer</span>
+</div>
+<h3 className="text-xl font-bold mb-3">Ultra-Low Latency</h3>
+<p className="text-on-surface-variant text-sm leading-relaxed mb-6">Our proprietary 'Neon-Wire' socket layer ensures sub-10ms round-trip execution for real-time visual feedback.</p>
+<div className="font-mono text-[10px] text-primary bg-primary/5 p-3 rounded">
+                        AVG_RTT: 4.2ms<br/>JITTER: &lt; 0.1ms
+                    </div>
+</div>
+
+<div className="surface-container p-8 rounded-xl border border-outline-variant/10 hover:border-tertiary/20 transition-all relative overflow-hidden">
+<div className="absolute top-0 right-0 w-24 h-24 bg-tertiary/5 blur-2xl"></div>
+<div className="w-12 h-12 rounded-lg bg-tertiary/10 flex items-center justify-center mb-6 text-tertiary">
+<span className="material-symbols-outlined">memory</span>
+</div>
+<h3 className="text-xl font-bold mb-3">Isomorphic Runtime</h3>
+<p className="text-on-surface-variant text-sm leading-relaxed mb-6">Execution environments are mirrored exactly between local and arena servers using containerized micro-kernels.</p>
+<div className="flex gap-2">
+<span className="px-2 py-1 rounded bg-surface-container-highest font-mono text-[9px]">V8_TURBO</span>
+<span className="px-2 py-1 rounded bg-surface-container-highest font-mono text-[9px]">WASM_CORE</span>
+</div>
+</div>
+
+<div className="surface-container-low p-8 rounded-xl border border-outline-variant/5 hover:border-primary/20 transition-all">
+<div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 text-primary">
+<span className="material-symbols-outlined">shield</span>
+</div>
+<h3 className="text-xl font-bold mb-3">Anti-Cheat Engine</h3>
+<p className="text-on-surface-variant text-sm leading-relaxed mb-6">AI-driven key-cadence analysis and packet inspection ensure that every line of code is human-crafted in real-time.</p>
+<div className="font-mono text-[10px] text-error bg-error/5 p-3 rounded">
+                        THREAT_LEVEL: NOMINAL<br/>ACTIVE_SCAN: 100%
+                    </div>
+</div>
+</div>
+</div>
+</section>
+
+<section className="py-24 bg-surface-container-lowest px-6 relative overflow-hidden">
+<div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+<div className="relative">
+<img alt="Code interface" className="rounded-xl shadow-2xl opacity-80 border border-outline-variant/20" data-alt="Modern dark software code editor on high-resolution monitor with dramatic neon blue and emerald green syntax highlighting highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUmWEx_BnhgZQIu4JOakJRP7cz_d2EvmaOzp-G5RqrZd8GKKKDwaqS8LAlz-8Gx6krdDicQP8t_o7eb6Dgp9BXRUDRcbTpJ5Uq5W64Vs230AqyYcfUYVxK9TCyIPfvFJr_zezznEXRQHQehdNAF-SeoyxDRL7a0-WhAtLYjyLwLqARhJ4lcopFdYdXLvIGMgxAziu5bpS_knyW3c8ktV1DiH2IMQRRDHapWYBc90-RhcFzopb5lAiG9NSKvv3vH3oSs0jao4FTIQo"/>
+<div className="absolute -bottom-8 -right-8 glass-panel p-6 rounded-xl border-tertiary/20 max-w-xs">
+<div className="flex items-center gap-2 mb-4">
+<span className="material-symbols-outlined text-tertiary">psychology</span>
+<span className="font-bold text-sm">Neural Suggestion</span>
+</div>
+<p className="text-xs text-on-surface-variant leading-relaxed mb-4">Advanced heuristics predict the optimal algorithmic path before you even finish the function signature.</p>
+<div className="text-[10px] font-mono text-tertiary">OPTIMIZING: 0(log n)</div>
+</div>
+</div>
+<div>
+<h2 className="text-4xl font-bold tracking-tight mb-6">Tactical Edge</h2>
+<p className="text-on-surface-variant text-lg leading-relaxed mb-8">Elevate your competitive performance with integrated AI tooling built specifically for high-speed problem solving.</p>
+<ul className="space-y-6">
+<li className="flex items-start gap-4">
+<div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-1 shrink-0">
+<span className="material-symbols-outlined text-[14px] text-primary">check</span>
+</div>
+<div>
+<h4 className="font-bold mb-1">Live Heuristic Analysis</h4>
+<p className="text-sm text-on-surface-variant">Real-time Big-O analysis of your current solution as you type.</p>
+</div>
+</li>
+<li className="flex items-start gap-4">
+<div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-1 shrink-0">
+<span className="material-symbols-outlined text-[14px] text-primary">check</span>
+</div>
+<div>
+<h4 className="font-bold mb-1">Predictive Debugging</h4>
+<p className="text-sm text-on-surface-variant">Auto-detect edge cases and logic flaws before running the test suite.</p>
+</div>
+</li>
+<li className="flex items-start gap-4">
+<div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-1 shrink-0">
+<span className="material-symbols-outlined text-[14px] text-primary">check</span>
+</div>
+<div>
+<h4 className="font-bold mb-1">Adaptive HUD</h4>
+<p className="text-sm text-on-surface-variant">A custom interface that highlights opponent progress and bottleneck points.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section className="py-24 px-6 bg-surface">
+<div className="max-w-7xl mx-auto">
+<div className="flex justify-between items-end mb-12">
+<div>
+<h2 className="text-4xl font-bold tracking-tight mb-4">The Elite</h2>
+<p className="text-on-surface-variant">Current seasonal rankings. The top 0.01% of global engineering talent.</p>
+</div>
+<div className="hidden sm:block">
+<span className="font-mono text-[10px] text-on-surface-variant/40 tracking-widest uppercase">Last Update: Just Now</span>
+</div>
+</div>
+<div className="overflow-x-auto">
+<table className="w-full text-left border-separate border-spacing-y-2">
+<thead>
+<tr className="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">
+<th className="px-6 py-4 font-medium">Rank</th>
+<th className="px-6 py-4 font-medium">Engineer</th>
+<th className="px-6 py-4 font-medium">ELO Rating</th>
+<th className="px-6 py-4 font-medium">Streak</th>
+<th className="px-6 py-4 font-medium">Tech Stack</th>
+<th className="px-6 py-4 font-medium">Status</th>
+</tr>
+</thead>
+<tbody className="text-sm">
+<tr className="bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<td className="px-6 py-5 font-mono text-primary font-bold">#01</td>
+<td className="px-6 py-5">
+<div className="flex items-center gap-3">
+<div className="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-bold text-xs">Z</div>
+<span className="font-bold">ZER0_DAY</span>
+</div>
+</td>
+<td className="px-6 py-5 font-mono">2,840</td>
+<td className="px-6 py-5 text-tertiary font-bold">12 🔥</td>
+<td className="px-6 py-5">
+<span className="px-2 py-1 rounded bg-surface-container-high text-[10px] font-mono">RUST</span>
+</td>
+<td className="px-6 py-5">
+<span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-tertiary/10 text-tertiary text-[10px] font-bold">
+<span className="w-1 h-1 rounded-full bg-tertiary"></span> IN_ARENA
+                                </span>
+</td>
+</tr>
+<tr className="bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<td className="px-6 py-5 font-mono text-primary font-bold">#02</td>
+<td className="px-6 py-5">
+<div className="flex items-center gap-3">
+<div className="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-bold text-xs">A</div>
+<span className="font-bold">ALGO_GOD</span>
+</div>
+</td>
+<td className="px-6 py-5 font-mono">2,715</td>
+<td className="px-6 py-5 text-on-surface-variant font-bold">3 -</td>
+<td className="px-6 py-5">
+<span className="px-2 py-1 rounded bg-surface-container-high text-[10px] font-mono">CPP</span>
+</td>
+<td className="px-6 py-5">
+<span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant text-[10px] font-bold">
+                                    OFFLINE
+                                </span>
+</td>
+</tr>
+<tr className="bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<td className="px-6 py-5 font-mono text-primary font-bold">#03</td>
+<td className="px-6 py-5">
+<div className="flex items-center gap-3">
+<div className="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-bold text-xs">S</div>
+<span className="font-bold">SYNTAX_ERROR</span>
+</div>
+</td>
+<td className="px-6 py-5 font-mono">2,698</td>
+<td className="px-6 py-5 text-tertiary font-bold">7 🔥</td>
+<td className="px-6 py-5">
+<span className="px-2 py-1 rounded bg-surface-container-high text-[10px] font-mono">GO</span>
+</td>
+<td className="px-6 py-5">
+<span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-tertiary/10 text-tertiary text-[10px] font-bold">
+<span className="w-1 h-1 rounded-full bg-tertiary"></span> IN_ARENA
+                                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<section className="py-32 px-6 relative overflow-hidden">
+<div className="absolute inset-0 bg-primary/5 -z-10"></div>
+<div className="max-w-4xl mx-auto text-center">
+<h2 className="text-5xl md:text-6xl font-black tracking-tighter mb-8 italic-none">READY FOR DEPLOYMENT?</h2>
+<p className="text-xl text-on-surface-variant mb-12">The arena doesn't care about your resume. Only your syntax matters.</p>
+<div className="flex flex-col sm:flex-row gap-4 justify-center">
+<button onClick={() => navigate('/arena/demo')} className="bg-primary text-on-primary px-10 py-5 rounded-lg font-bold text-lg active:scale-95 transition-transform">
+                    START MATCHMAKING
+                </button>
+<button onClick={() => window.open('https://discord.gg', '_blank')} className="bg-surface-container-high border border-outline-variant/20 text-on-surface px-10 py-5 rounded-lg font-bold text-lg active:scale-95 transition-transform">
+                    JOIN THE DISCORD
+                </button>
+</div>
+</div>
+</section>
+
+<footer className="bg-[#131313] border-t border-[#424754]/15">
+<div className="flex flex-col md:flex-row justify-between items-center py-8 px-6 max-w-7xl mx-auto gap-4 font-['JetBrains_Mono'] text-[10px] uppercase tracking-widest text-[#e5e2e1]/40">
+<div>
+                © 2024 DEVDUEL • System: Operational • v2.4.0-stable
+            </div>
+<div className="flex gap-8">
+<a className="hover:text-[#4edea3] transition-colors" href="#">Status</a>
+<a className="hover:text-[#4edea3] transition-colors" href="#">GitHub</a>
+<a className="hover:text-[#4edea3] transition-colors" href="#">Changelog</a>
+<a className="hover:text-[#4edea3] transition-colors" href="#">Security</a>
+</div>
+</div>
+</footer>
+
+
         </div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.2 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10 cursor-pointer group"
-          onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-        >
-          <span className="font-code text-outline-variant text-meta tracking-[0.4em] uppercase group-hover:text-primary-container transition-colors">Scroll</span>
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-            className="flex flex-col items-center"
-          >
-            <div className="w-[1.5px] h-10 bg-gradient-to-b from-primary-container to-transparent opacity-60" />
-            <ChevronDown className="w-4 h-4 text-primary-container -mt-1" />
-          </motion.div>
-        </motion.div>
-      </motion.section>
-
-      {/* ─────── LIVE TICKER ─────── */}
-      <LiveTicker />
-
-      {/* ─────── FEATURES SECTION ─────── */}
-      <SectionWrapper id="features">
-        <div className="absolute inset-0 grid-bg opacity-100 pointer-events-none" />
-        
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          className="mb-16 relative z-10"
-        >
-          <SectionTag>Core Systems</SectionTag>
-          <h2 className="font-display font-black text-4xl md:text-6xl text-white leading-none tracking-tight">
-            Built for{' '}
-            <GlitchText as="span" className="neon-cyan">
-              the Obsessed
-            </GlitchText>
-          </h2>
-          <p className="font-body text-on-surface-variant mt-5 text-lg max-w-lg leading-relaxed">
-            Every feature simulates high-pressure, real-world engineering culture — inside a competitive duel arena.
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 relative z-10">
-          {features.map((feat, i) => (
-            <FeatureCard key={feat.title} {...feat} delay={i * 0.08} index={i} />
-          ))}
-        </div>
-      </SectionWrapper>
-
-      {/* ─────── LIVE DUEL PREVIEW SECTION ─────── */}
-      <SectionWrapper id="duel">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          className="mb-8"
-        >
-          <SectionTag>Arena Preview</SectionTag>
-          <h2 className="font-display font-black text-4xl md:text-6xl text-white leading-none tracking-tight">
-            Watch it{' '}
-            <span className="text-gradient-purple [text-shadow:0_0_30px_rgba(188,0,255,0.3)]">
-              Happen Live
-            </span>
-          </h2>
-          <p className="font-body text-on-surface-variant mt-4 text-lg max-w-xl leading-relaxed">
-            Two editors. One problem. Real-time sync. AI overlay tracking complexity and velocity. This is how masters compete.
-          </p>
-        </motion.div>
-
-        <DuelPreview />
-
-        <div className="flex justify-center mt-12">
-          <CTAButton onClick={() => navigate('/app')} variant="glow" size="lg" icon={<Sparkles className="w-5 h-5" />}>
-            Initialize Your First Duel
-          </CTAButton>
-        </div>
-      </SectionWrapper>
-
-      {/* ─────── LEADERBOARD SECTION ─────── */}
-      <SectionWrapper id="leaderboard">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-          className="mb-4 text-center"
-        >
-          <div className="flex justify-center">
-            <SectionTag>Global Rankings</SectionTag>
-          </div>
-          <h2 className="font-display font-black text-4xl md:text-6xl text-white leading-none tracking-tight">
-            The{' '}
-            <GlitchText as="span" className="neon-purple">
-              Elite
-            </GlitchText>
-          </h2>
-          <p className="font-body text-on-surface-variant mt-4 text-lg max-w-xl mx-auto leading-relaxed">
-            These are the top operatives. Every win earns ELO. Every loss costs it. Authenticate to track your climb.
-          </p>
-        </motion.div>
-
-        <LeaderboardPreview />
-
-        <div className="flex justify-center mt-16">
-          <CTAButton onClick={() => navigate('/app')} variant="primary" size="lg" icon={<ArrowRight className="w-4 h-4" />}>
-            Climb the Rankings
-          </CTAButton>
-        </div>
-      </SectionWrapper>
-
-      {/* ─────── FINAL CALL TO ACTION ─────── */}
-      <section className="relative py-48 px-6 md:px-12 text-center overflow-hidden">
-        {/* Cinematic glow background */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <motion.div
-            animate={{
-              scale: [1, 1.15, 1],
-              opacity: [0.08, 0.15, 0.08],
-            }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="w-[800px] h-[800px] rounded-full blur-[140px]"
-            style={{ background: 'radial-gradient(circle, #00e5ff 0%, #a855f7 50%, #e81cff 100%)' }}
-          />
-        </div>
-        <MatrixRain opacity={0.05} />
-
-        {/* Framing Dividers */}
-        <NeonDivider className="absolute top-0 left-0 right-0 brightness-150" />
-        <NeonDivider className="absolute bottom-0 left-0 right-0 brightness-150" />
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 max-w-4xl mx-auto"
-        >
-          <div className="flex justify-center mb-10">
-            <SectionTag>Ready to Execute?</SectionTag>
-          </div>
-          <h2 className="font-display font-black text-5xl md:text-7xl xl:text-8xl text-white leading-none tracking-tight mb-8">
-            Your Opponent is
-            <br />
-            <motion.span
-              className="text-gradient-synth inline-block drop-shadow-[0_0_30px_rgba(0,229,255,0.3)]"
-              animate={{ filter: ['hue-rotate(0deg)', 'hue-rotate(360deg)'] }}
-              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            >
-              Already Waiting.
-            </motion.span>
-          </h2>
-          <p className="font-body text-on-surface-variant text-xl mb-14 max-w-lg mx-auto leading-relaxed">
-            Jump into the lobby, get matched instantly, and prove your technical superiority in real-time.
-          </p>
-          <div className="flex justify-center">
-            <CTAButton onClick={() => navigate('/app')} variant="glow" size="lg" className="px-16 py-6 group">
-              <span className="inline-block w-2.5 h-2.5 rounded-full bg-background animate-ping mr-3 group-hover:bg-primary-container transition-colors" />
-              Enter the Arena Now
-            </CTAButton>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ─────── FOOTER ─────── */}
-      <footer className="border-t border-outline-variant/10 py-12 px-6 md:px-12 relative bg-surface-container-lowest/50 backdrop-blur-xl shrink-0">
-        <NeonDivider className="absolute top-0 left-0 right-0 opacity-40" />
-        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-6">
-            <span className="font-display font-black text-gradient-cyan text-2xl tracking-[0.25em] uppercase">DevDuel</span>
-            <div className="h-4 w-px bg-outline-variant/20 hidden md:block" />
-            <span className="font-code text-on-surface-variant text-[10px] tracking-widest uppercase opacity-60">
-              // Real-Time Coding Wars
-            </span>
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-10 font-code text-[11px] text-on-surface-variant uppercase tracking-[0.3em]">
-            {[
-              { href: '#features', label: '/System' },
-              { href: '#duel', label: '/Arena' },
-              { href: '#leaderboard', label: '/Global-Rank' },
-            ].map(link => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="relative group hover:text-primary-container transition-all duration-300 transform hover:-translate-y-0.5"
-              >
-                {link.label}
-                <span className="absolute -bottom-1.5 left-0 w-0 h-[1.5px] bg-primary-container group-hover:w-full transition-all duration-300 shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
-              </a>
-            ))}
-            <button
-              onClick={() => navigate('/app')}
-              className="relative group hover:text-primary-container transition-all duration-300 transform hover:-translate-y-0.5"
-            >
-              /Enter-Lobby
-              <span className="absolute -bottom-1.5 left-0 w-0 h-[1.5px] bg-primary-container group-hover:w-full transition-all duration-300 shadow-[0_0_8px_rgba(0,229,255,0.8)]" />
-            </button>
-          </div>
-          
-          <div className="flex flex-col items-center md:items-end gap-1 opacity-40">
-            <p className="font-code text-meta tracking-widest">
-              © 2026 DEWDUEL.PROTOCOL
-            </p>
-            <p className="font-code text-[8px] tracking-[0.2em] text-primary-container">
-              v1.0.4-alpha // ALL SYSTEMS NOMINAL
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
-  );
+    );
 }

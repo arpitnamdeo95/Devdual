@@ -1,5 +1,6 @@
+import { AppNavbar, AppSidebar } from '../components/AppLayout';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { socket } from '../socket';
 import { Navbar } from '../components/Navbar';
@@ -62,381 +63,258 @@ export default function LobbyDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#e5e2e1] font-[Inter] flex flex-col relative overflow-hidden">
-      <LiquidEther />
-      <BackgroundElements />
-      <Navbar />
+<div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
 
-      <div className="flex-1 p-6 pt-28 max-w-7xl mx-auto w-full relative z-10">
-        {/* Header with animated entrance */}
-        <motion.header
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-14"
-        >
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-4 h-[1px] bg-accent-green" />
-                <span className="text-meta opacity-70">
-                  DevDuel Global Network Online
-                </span>
-              </div>
-              <h1 className="text-6xl md:text-8xl font-bold tracking-tighter uppercase font-[Space_Grotesk] leading-none mb-4">
-                <span className="text-gradient-cyan">CodeBattle</span><br />
-                <span className="text-white">Arena</span>
-              </h1>
-              <p className="text-meta">
-                <span className="text-accent-green">1,420</span> Active Users •{' '}
-                <span className="text-accent-purple">142</span> Duels In Progress
-              </p>
-            </div>
 
-            {/* The Centerpiece: DataGlobe */}
-            <div className="relative w-48 h-48 hidden md:block">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 border border-primary-container/20 rounded-full"
-              />
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-4 border border-accent-purple/20 rounded-full"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full bg-primary-container/5 blur-3xl" />
-                <div className="relative">
-                  <Swords className="w-12 h-12 text-primary-container animate-float" />
-                  <div className="absolute -inset-4 border border-primary-container/40 rounded-full animate-ping opacity-20" />
-                </div>
-              </div>
-              {/* Orbital nodes */}
-              {[0, 72, 144, 216, 288].map((deg) => (
-                <motion.div
-                  key={deg}
-                  animate={{
-                    opacity: [0.2, 1, 0.2],
-                    scale: [0.8, 1.2, 0.8],
-                  }}
-                  transition={{ duration: 3 + Math.random() * 2, repeat: Infinity }}
-                  className="absolute w-1.5 h-1.5 bg-primary-container rounded-full shadow-[0_0_8px_rgba(0,229,255,1)]"
-                  style={{
-                    top: '50%',
-                    left: '50%',
-                    transform: `rotate(${deg}deg) translateX(90px)`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        </motion.header>
+<AppNavbar />
+<div className="flex pt-16 min-h-screen">
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<AppSidebar />
 
-          {/* LEFT — Main panels */}
-          <div className="lg:col-span-8 space-y-6">
+<main className="flex-1 bg-surface-container-lowest p-8 overflow-y-auto">
+<div className="max-w-7xl mx-auto space-y-8">
 
-            {/* Find Match card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="relative glass-panel p-8 overflow-hidden group border border-outline-variant/30"
-            >
-              {/* Animated background grid */}
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(0,229,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,229,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] opacity-50" />
+<header className="flex justify-between items-end">
+<div>
+<h1 className="text-3xl font-extrabold tracking-tighter text-on-surface">PERFORMANCE_OVERVIEW</h1>
+<p className="text-on-surface-variant font-mono text-sm mt-1">SESSION_UID: 4882-9901-RANKED</p>
+</div>
+<div className="flex gap-4">
+<button className="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg text-sm font-semibold hover:bg-surface-bright transition-all">
+                            EXPORT_LOGS
+                        </button>
+<button onClick={isSearching ? handleCancelSearch : handleFindMatch} className={`px-4 py-2 ${isSearching ? 'bg-error text-on-error' : 'bg-gradient-to-b from-primary to-primary-container text-on-primary'} rounded-lg text-sm font-bold shadow-lg shadow-primary/10 hover:brightness-110 transition-all`}>
+    {isSearching ? `CANCEL (${searchTime}s)` : 'NEW_BATTLE'}
+</button>
+</div>
+</header>
 
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary-container via-primary-container/50 to-transparent" />
+<div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-2">
-                  <Swords className="w-6 h-6 text-primary-container" />
-                  <h2 className="text-3xl font-[Space_Grotesk] font-bold uppercase text-white">
-                    Enter the Matrix
-                  </h2>
-                </div>
-                <p className="text-[#b9cacb] max-w-lg mb-8 text-sm leading-relaxed">
-                  Engage in high-stakes 1v1 coding combat. Execute algorithms under extreme pressure. Winner takes Elo.
-                </p>
+<div className="col-span-1 md:col-span-2 bg-surface-container-low rounded-xl p-6 relative overflow-hidden group">
+<div className="relative z-10">
+<span className="text-xs font-mono tracking-widest text-on-surface-variant uppercase">Current Rating</span>
+<div className="flex items-baseline gap-3 mt-2">
+<span className="text-5xl font-black text-primary tracking-tighter">2,842</span>
+<span className="text-tertiary font-mono text-sm font-bold">+142 pts</span>
+</div>
+</div>
 
-                <AnimatePresence mode="wait">
-                  {isSearching ? (
-                    <motion.div
-                      key="searching"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex items-center gap-6"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Loader className="w-5 h-5 text-primary-container animate-spin" />
-                        <div>
-                          <p className="text-meta text-primary-container font-bold">
-                            SCANNING FOR OPPONENT...
-                          </p>
-                          <p className="text-meta opacity-60 mt-1">
-                            {searchTime}s elapsed • {queueCount} players in queue
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleCancelSearch}
-                        className="ml-auto px-4 py-2 border border-accent-red/30 text-accent-red text-meta uppercase tracking-widest hover:bg-accent-red/10 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </motion.div>
-                  ) : (
-                    <motion.button
-                      key="find"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleFindMatch}
-                      className="relative px-10 py-4 bg-primary-container text-[#002022] font-bold tracking-widest uppercase transition-all duration-300 clip-angle group overflow-hidden"
-                    >
-                      <span className="relative z-10 flex items-center gap-2">
-                        <Zap className="w-5 h-5" />
-                        Find Match
-                      </span>
-                      <motion.div
-                        className="absolute inset-0 bg-white"
-                        initial={{ x: '-100%' }}
-                        whileHover={{ x: '0%' }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-              </div>
+<div className="absolute bottom-0 right-0 left-0 h-24 opacity-20 pointer-events-none">
+<svg className="w-full h-full preserve-3d" viewBox="0 0 400 100">
+<path className="text-primary" d="M0,80 Q50,75 100,60 T200,50 T300,20 T400,10" fill="none" stroke="currentColor" strokeWidth="4"></path>
+</svg>
+</div>
+</div>
 
-              {/* Hover glow effect */}
-              <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary-container/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            </motion.div>
+<div className="bg-surface-container-low rounded-xl p-6 flex flex-col justify-between">
+<span className="text-xs font-mono tracking-widest text-on-surface-variant uppercase">Win Rate</span>
+<div>
+<span className="text-4xl font-bold text-on-surface">68.4%</span>
+<div className="w-full h-1.5 bg-surface-container-highest mt-4 rounded-full overflow-hidden">
+<div className="w-[68.4%] h-full bg-tertiary"></div>
+</div>
+</div>
+</div>
 
-            {/* Stats + Spectate row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Stats card */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="glass-panel border border-outline-variant/30 p-8 relative overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-primary-container via-accent-purple to-transparent" />
-                <div className="flex items-center gap-2 mb-8">
-                  <Shield className="w-4 h-4 text-primary-container" />
-                  <span className="text-meta">Global Protocol Stats</span>
-                </div>
-                <div className="space-y-6">
-                  {[
-                    { label: 'GLOBAL RANK', value: '#4,021', color: 'text-white', icon: <Trophy className="w-4 h-4" /> },
-                    { label: 'ELO RATING', value: '1540', color: 'text-accent-purple', icon: <TrendingUp className="w-4 h-4" /> },
-                    { label: 'WIN RATE', value: '52.4%', color: 'text-accent-green', icon: <Activity className="w-4 h-4" /> },
-                    { label: 'WINS', value: '47', color: 'text-primary-container', icon: <Sparkles className="w-4 h-4" /> },
-                  ].map((row, i) => (
-                    <motion.div
-                      key={row.label}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4 + i * 0.1 }}
-                      className="flex justify-between items-center border-b border-outline-variant/10 pb-4 last:border-0"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-on-surface-variant/40">{row.icon}</span>
-                        <span className="text-meta text-on-surface-variant font-medium">{row.label}</span>
-                      </div>
-                      <span className={`font-[Space_Grotesk] font-bold text-2xl ${row.color}`}>{row.value}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
+<div className="bg-surface-container-low rounded-xl p-6 flex flex-col justify-between">
+<span className="text-xs font-mono tracking-widest text-on-surface-variant uppercase">Global Rank</span>
+<div>
+<span className="text-4xl font-bold text-on-surface">#1,042</span>
+<p className="text-on-surface-variant text-xs mt-2 font-medium">Top 2.1% Worldwide</p>
+</div>
+</div>
+</div>
 
-              {/* Spectate card */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-                onClick={() => navigate('/watch/demo')}
-                className="glass-panel border border-outline-variant/30 p-8 cursor-pointer group relative overflow-hidden hover:border-primary-container/30 transition-all duration-500"
-              >
-                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-accent-purple via-primary-container to-transparent opacity-50" />
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                <div className="flex items-center gap-2 mb-6">
-                  <Eye className="w-4 h-4 text-accent-purple" />
-                  <span className="text-meta">Live Uplink</span>
-                </div>
-                <h3 className="text-3xl font-[Space_Grotesk] font-bold text-white mb-3 uppercase leading-tight">Live Matches</h3>
-                <p className="text-sm text-on-surface-variant leading-relaxed mb-8">
-                  Watch high-ELO masterclass duels in real-time. Gain competitive edge through observation.
-                </p>
+<div className="lg:col-span-2 bg-surface-container rounded-xl p-8">
+<div className="flex justify-between items-start mb-10">
+<div>
+<h3 className="text-lg font-bold tracking-tight text-on-surface">RATING_HISTORY</h3>
+<p className="text-xs text-on-surface-variant font-mono uppercase mt-1">Last 30 Battle Sessions</p>
+</div>
+<div className="flex gap-2">
+<span className="px-2 py-1 rounded bg-surface-container-highest text-[10px] font-mono text-on-surface-variant">1M</span>
+<span className="px-2 py-1 rounded bg-primary/20 text-[10px] font-mono text-primary border border-primary/20">3M</span>
+<span className="px-2 py-1 rounded bg-surface-container-highest text-[10px] font-mono text-on-surface-variant">ALL</span>
+</div>
+</div>
 
-                {/* Live match preview cards */}
-                <div className="space-y-3">
-                  {recentMatches.map((m, i) => (
-                    <div key={i} className="flex items-center justify-between bg-surface-container/50 px-4 py-3 border border-outline-variant/10 group-hover:border-primary-container/10 transition-colors">
-                      <div className="flex items-center gap-2 font-mono text-xs">
-                        <span className="text-primary-container font-bold">{m.p1}</span>
-                        <span className="opacity-30">vs</span>
-                        <span className="text-accent-orange font-bold">{m.p2}</span>
-                      </div>
-                      <span className="text-meta opacity-50">{m.time}</span>
-                    </div>
-                  ))}
-                </div>
+<div className="w-full h-64 relative">
+<svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 200">
+<defs>
+<lineargradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#adc6ff" stop-opacity="0.3"></stop>
+<stop offset="100%" stop-color="#adc6ff" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
 
-                <div className="mt-8 flex items-center text-primary-container text-meta font-bold uppercase tracking-[0.2em] group-hover:translate-x-2 transition-transform">
-                  Initialize Spectator Mode
-                  <ChevronUp className="w-4 h-4 ml-2 rotate-90" />
-                </div>
-              </motion.div>
-            </div>
-          </div>
+<line stroke="#424754" strokeDasharray="4" strokeWidth="0.5" x1="0" x2="1000" y1="50" y2="50"></line>
+<line stroke="#424754" strokeDasharray="4" strokeWidth="0.5" x1="0" x2="1000" y1="100" y2="100"></line>
+<line stroke="#424754" strokeDasharray="4" strokeWidth="0.5" x1="0" x2="1000" y1="150" y2="150"></line>
 
-          {/* RIGHT — Leaderboard sidebar */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="lg:col-span-4"
-          >
-            <div className="glass-panel border border-outline-variant/30 relative overflow-hidden h-full">
-              {/* Gradient accent */}
-              <div className="absolute top-0 left-0 w-[2px] h-full bg-gradient-to-b from-primary-container via-accent-purple to-transparent" />
+<path d="M0,180 L0,150 L100,160 L200,120 L300,140 L400,90 L500,100 L600,60 L700,75 L800,40 L900,50 L1000,20 L1000,200 L0,200 Z" fill="url(#lineGrad)"></path>
 
-              {/* Tabs */}
-              <div className="flex border-b border-outline-variant/30">
-                <button
-                  onClick={() => setActiveTab('leaderboard')}
-                  className={`flex-1 py-4 text-meta font-bold uppercase tracking-widest transition-colors ${
-                    activeTab === 'leaderboard'
-                      ? 'text-primary-container bg-primary-container/5 border-b-2 border-primary-container'
-                      : 'text-on-surface-variant hover:text-white'
-                  }`}
-                >
-                  <Trophy className="w-3 h-3 inline mr-2 mb-0.5" /> High Rank
-                </button>
-                <button
-                  onClick={() => setActiveTab('recent')}
-                  className={`flex-1 py-4 text-meta font-bold uppercase tracking-widest transition-colors ${
-                    activeTab === 'recent'
-                      ? 'text-accent-purple bg-accent-purple/5 border-b-2 border-accent-purple'
-                      : 'text-on-surface-variant hover:text-white'
-                  }`}
-                >
-                  <Clock className="w-3 h-3 inline mr-2 mb-0.5" /> Recent
-                </button>
-              </div>
+<path d="M0,150 C50,155 50,165 100,160 C150,155 150,125 200,120 C250,115 250,145 300,140 C350,135 350,95 400,90 C450,85 450,105 500,100 C550,95 550,65 600,60 C650,55 650,80 700,75 C750,70 750,45 800,40 C850,35 850,55 900,50 C950,45 950,25 1000,20" fill="none" stroke="#adc6ff" strokeLinecap="round" strokeWidth="3"></path>
 
-              <div className="p-4">
-                <AnimatePresence mode="wait">
-                  {activeTab === 'leaderboard' ? (
-                    <motion.div
-                      key="leaderboard"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="space-y-1"
-                    >
-                      {leaderboardData.map((player, idx) => (
-                        <motion.div
-                          key={player.name}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: idx * 0.08 }}
-                          className={`flex items-center p-3 hover:bg-surface-container-high transition-colors group cursor-pointer ${
-                            idx === 0 ? 'bg-primary-container/10 border border-primary-container/20' : 'border border-transparent'
-                          }`}
-                        >
-                          <span className={`font-mono font-black text-lg w-8 ${
-                            idx === 0 ? 'text-primary-container' :
-                            idx === 1 ? 'text-accent-purple' :
-                            idx === 2 ? 'text-accent-orange' : 'text-on-surface-variant/40'
-                          }`}>
-                            {player.rank.toString().padStart(2, '0')}
-                          </span>
+<circle cx="800" cy="40" fill="#131313" r="5" stroke="#adc6ff" strokeWidth="2"></circle>
+</svg>
+<div className="absolute top-0 left-[80%] -translate-x-1/2 p-2 glass-panel border border-outline-variant/20 rounded shadow-xl pointer-events-none">
+<p className="text-[10px] font-mono text-primary font-bold">2,842 ELO</p>
+<p className="text-[8px] text-on-surface-variant uppercase">Match ID #4421</p>
+</div>
+</div>
+<div className="flex justify-between mt-6 px-2">
+<span className="text-[10px] font-mono text-on-surface-variant">OCT_01</span>
+<span className="text-[10px] font-mono text-on-surface-variant">OCT_10</span>
+<span className="text-[10px] font-mono text-on-surface-variant">OCT_20</span>
+<span className="text-[10px] font-mono text-on-surface-variant">OCT_30</span>
+</div>
+</div>
 
-                          <div className="flex-1 ml-3">
-                            <span className="font-mono text-white text-sm font-bold uppercase tracking-wider">{player.name}</span>
-                            {player.streak > 0 && (
-                              <span className="ml-2 text-meta bg-accent-green/10 text-accent-green px-2 py-0.5 font-bold border border-accent-green/20">
-                                W{player.streak}
-                              </span>
-                            )}
-                          </div>
+<div className="bg-surface-container rounded-xl p-8">
+<h3 className="text-lg font-bold tracking-tight text-on-surface mb-6 uppercase">Skill_Distribution</h3>
+<div className="space-y-5">
+<div className="space-y-2">
+<div className="flex justify-between text-xs font-mono uppercase">
+<span className="text-on-surface">Data Structures</span>
+<span className="text-primary">94%</span>
+</div>
+<div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div className="w-[94%] h-full bg-primary"></div>
+</div>
+</div>
+<div className="space-y-2">
+<div className="flex justify-between text-xs font-mono uppercase">
+<span className="text-on-surface">Algorithms</span>
+<span className="text-primary">82%</span>
+</div>
+<div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div className="w-[82%] h-full bg-primary"></div>
+</div>
+</div>
+<div className="space-y-2">
+<div className="flex justify-between text-xs font-mono uppercase">
+<span className="text-on-surface">System Design</span>
+<span className="text-primary">65%</span>
+</div>
+<div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div className="w-[65%] h-full bg-primary"></div>
+</div>
+</div>
+<div className="space-y-2">
+<div className="flex justify-between text-xs font-mono uppercase">
+<span className="text-on-surface">Concurrency</span>
+<span className="text-primary">48%</span>
+</div>
+<div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div className="w-[48%] h-full bg-primary"></div>
+</div>
+</div>
+</div>
+<div className="mt-8 pt-6 border-t border-outline-variant/10">
+<h4 className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mb-4">Preferred_Stack</h4>
+<div className="flex flex-wrap gap-2">
+<span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-mono text-on-surface border border-outline-variant/10">Rust</span>
+<span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-mono text-on-surface border border-outline-variant/10">TypeScript</span>
+<span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-mono text-on-surface border border-outline-variant/10">Python</span>
+<span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-mono text-on-surface border border-outline-variant/10">Go</span>
+</div>
+</div>
+</div>
+</div>
 
-                          <div className="flex items-center gap-3">
-                            <span className={`font-[Space_Grotesk] font-bold text-lg ${
-                              idx === 0 ? 'text-primary-container' : 'text-white'
-                            }`}>
-                              {player.elo}
-                            </span>
-                            {player.trend === 'up' && <ChevronUp className="w-3 h-3 text-accent-green" />}
-                            {player.trend === 'down' && <ChevronDown className="w-3 h-3 text-accent-red" />}
-                            {player.trend === 'same' && <Minus className="w-3 h-3 opacity-20" />}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="recent"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="space-y-3"
-                    >
-                      {recentMatches.map((m, i) => (
-                        <div key={i} className="bg-surface-container/30 p-4 border border-outline-variant/10">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="font-mono text-xs font-bold leading-none">
-                              <span className="text-primary-container">{m.p1}</span>
-                              <span className="mx-2 opacity-20">vs</span>
-                              <span className="text-accent-orange">{m.p2}</span>
-                            </div>
-                            <span className="text-meta opacity-40">{m.time}</span>
-                          </div>
-                          <div className="text-meta text-accent-green font-bold flex items-center justify-between">
-                            <span>RESULT: {m.winner} WIN</span>
-                            <span className="w-4 h-[1px] bg-accent-green/30" />
-                          </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+<section className="bg-surface-container rounded-xl overflow-hidden">
+<div className="p-6 border-b border-outline-variant/10 flex justify-between items-center">
+<h3 className="text-lg font-bold tracking-tight text-on-surface uppercase">Recent_Battles</h3>
+<button className="text-primary text-xs font-bold hover:underline">VIEW_ALL_HISTORY</button>
+</div>
+<div className="overflow-x-auto">
+<table className="w-full text-left border-collapse">
+<thead>
+<tr className="bg-surface-container-high/50">
+<th className="px-6 py-4 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Outcome</th>
+<th className="px-6 py-4 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Problem_Name</th>
+<th className="px-6 py-4 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Difficulty</th>
+<th className="px-6 py-4 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Delta</th>
+<th className="px-6 py-4 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Duration</th>
+<th className="px-6 py-4 text-[10px] font-mono text-on-surface-variant uppercase tracking-widest text-right">Date</th>
+</tr>
+</thead>
+<tbody className="divide-y divide-outline-variant/10">
+<tr className="hover:bg-surface-container-high transition-colors cursor-pointer group">
+<td className="px-6 py-4">
+<div className="flex items-center gap-2">
+<span className="w-2 h-2 rounded-full bg-tertiary"></span>
+<span className="text-tertiary font-bold text-xs">WIN</span>
+</div>
+</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface">Red_Black_Tree_Rebalancing</td>
+<td className="px-6 py-4">
+<span className="px-2 py-0.5 rounded bg-error/10 text-error text-[10px] font-bold uppercase">Hard</span>
+</td>
+<td className="px-6 py-4 font-mono text-sm text-tertiary">+24</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface-variant">14:42</td>
+<td className="px-6 py-4 text-right font-mono text-xs text-on-surface-variant">2023-10-31</td>
+</tr>
+<tr className="hover:bg-surface-container-high transition-colors cursor-pointer group">
+<td className="px-6 py-4">
+<div className="flex items-center gap-2">
+<span className="w-2 h-2 rounded-full bg-tertiary"></span>
+<span className="text-tertiary font-bold text-xs">WIN</span>
+</div>
+</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface">Fast_Fourier_Transform_Impl</td>
+<td className="px-6 py-4">
+<span className="px-2 py-0.5 rounded bg-error/10 text-error text-[10px] font-bold uppercase">Hard</span>
+</td>
+<td className="px-6 py-4 font-mono text-sm text-tertiary">+18</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface-variant">22:01</td>
+<td className="px-6 py-4 text-right font-mono text-xs text-on-surface-variant">2023-10-30</td>
+</tr>
+<tr className="hover:bg-surface-container-high transition-colors cursor-pointer group">
+<td className="px-6 py-4">
+<div className="flex items-center gap-2">
+<span className="w-2 h-2 rounded-full bg-surface-variant"></span>
+<span className="text-on-surface-variant font-bold text-xs">LOSS</span>
+</div>
+</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface">LRU_Cache_Design</td>
+<td className="px-6 py-4">
+<span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase">Medium</span>
+</td>
+<td className="px-6 py-4 font-mono text-sm text-error">-12</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface-variant">08:15</td>
+<td className="px-6 py-4 text-right font-mono text-xs text-on-surface-variant">2023-10-29</td>
+</tr>
+<tr className="hover:bg-surface-container-high transition-colors cursor-pointer group">
+<td className="px-6 py-4">
+<div className="flex items-center gap-2">
+<span className="w-2 h-2 rounded-full bg-tertiary"></span>
+<span className="text-tertiary font-bold text-xs">WIN</span>
+</div>
+</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface">Async_Task_Scheduler</td>
+<td className="px-6 py-4">
+<span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase">Medium</span>
+</td>
+<td className="px-6 py-4 font-mono text-sm text-tertiary">+12</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface-variant">10:30</td>
+<td className="px-6 py-4 text-right font-mono text-xs text-on-surface-variant">2023-10-28</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</main>
+</div>
 
-              {/* Quick stats at bottom of sidebar */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="mt-4 p-4 grid grid-cols-2 gap-2"
-              >
-                {[
-                  { label: 'ONLINE', value: '1.4k', color: 'text-accent-green' },
-                  { label: 'QUEUE', value: '84', color: 'text-primary-container' },
-                ].map((stat) => (
-                  <div key={stat.label} className="p-3 bg-surface-container-high/30 border border-outline-variant/10 text-center">
-                    <p className={`font-display font-black text-xl leading-none mb-1 ${stat.color}`}>{stat.value}</p>
-                    <p className="text-meta opacity-50">{stat.label}</p>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+<button className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center z-50">
+<span className="material-symbols-outlined">add</span>
+</button>
 
-      {/* Live ticker at bottom */}
-      <div className="relative z-50">
-        <LiveTicker />
-      </div>
-    </div>
-  );
+</div>
+);
 }

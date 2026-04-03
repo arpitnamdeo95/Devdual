@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DevDuel Arena | Code. Battle. Dominate.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface": "#e5e2e1",
+                    "on-secondary-fixed": "#111c2d",
+                    "inverse-on-surface": "#313030",
+                    "primary-container": "#4d8eff",
+                    "error": "#ffb4ab",
+                    "surface-container-lowest": "#0e0e0e",
+                    "surface": "#131313",
+                    "on-secondary-container": "#aeb9d0",
+                    "on-secondary-fixed-variant": "#3c475a",
+                    "on-primary-container": "#00285d",
+                    "surface-tint": "#adc6ff",
+                    "on-tertiary": "#003824",
+                    "secondary-fixed-dim": "#bcc7de",
+                    "secondary-fixed": "#d8e3fb",
+                    "secondary": "#bcc7de",
+                    "surface-bright": "#393939",
+                    "on-tertiary-container": "#00311f",
+                    "surface-variant": "#353534",
+                    "primary": "#adc6ff",
+                    "on-primary-fixed": "#001a42",
+                    "on-secondary": "#263143",
+                    "on-error": "#690005",
+                    "inverse-surface": "#e5e2e1",
+                    "outline-variant": "#424754",
+                    "on-primary-fixed-variant": "#004395",
+                    "on-error-container": "#ffdad6",
+                    "secondary-container": "#3e495d",
+                    "tertiary": "#4edea3",
+                    "surface-container-high": "#2a2a2a",
+                    "inverse-primary": "#005ac2",
+                    "on-tertiary-fixed": "#002113",
+                    "surface-container-highest": "#353534",
+                    "on-surface-variant": "#c2c6d6",
+                    "primary-fixed": "#d8e2ff",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-container": "#201f1f",
+                    "on-primary": "#002e6a",
+                    "error-container": "#93000a",
+                    "outline": "#8c909f",
+                    "on-background": "#e5e2e1",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "surface-dim": "#131313",
+                    "surface-container-low": "#1c1b1b",
+                    "background": "#131313",
+                    "tertiary-container": "#00a572"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"],
+                    "mono": ["JetBrains Mono"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #131313; color: #e5e2e1; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        
+        .obsidian-grid {
+            background-image: linear-gradient(to right, #ffffff05 1px, transparent 1px),
+                              linear-gradient(to bottom, #ffffff05 1px, transparent 1px);
+            background-size: 40px 40px;
+            perspective: 1000px;
+        }
+
+        .perspective-container {
+            perspective: 2000px;
+            transform-style: preserve-3d;
+        }
+
+        .terminal-3d {
+            transform: rotateX(15deg) rotateY(-15deg) rotateZ(5deg);
+            transition: transform 0.5s ease-out;
+        }
+
+        .terminal-3d:hover {
+            transform: rotateX(5deg) rotateY(-5deg) rotateZ(2deg);
+        }
+
+        .glass-panel {
+            background: rgba(28, 27, 27, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(66, 71, 84, 0.15);
+        }
+
+        .glow-pulse {
+            box-shadow: 0 0 20px rgba(173, 198, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 w-full z-50 bg-[#131313]/80 backdrop-blur-xl shadow-[0_40px_40px_rgba(0,0,0,0.06)]">
+<div class="flex justify-between items-center max-w-7xl mx-auto px-6 h-16">
+<div class="flex items-center gap-8">
+<div class="text-xl font-bold tracking-tighter text-[#adc6ff] dark:text-[#adc6ff] cursor-pointer flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">terminal</span>
+                    DevDuel Arena
+                </div>
+<div class="hidden md:flex gap-6 font-['Inter'] font-medium text-sm tracking-tight">
+<a class="text-[#adc6ff] border-b-2 border-[#adc6ff] pb-1 cursor-pointer transition-transform active:scale-95" href="#">Arena</a>
+<a class="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95" href="#">Rankings</a>
+<a class="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95" href="#">Docs</a>
+<a class="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95" href="#">Compete</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex gap-4 items-center mr-4">
+<span class="material-symbols-outlined text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors cursor-pointer">terminal</span>
+<span class="material-symbols-outlined text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors cursor-pointer">settings</span>
+</div>
+<button class="bg-gradient-to-v from-primary to-primary-container text-on-primary px-5 py-1.5 rounded-lg text-sm font-bold tracking-tight active:scale-95 transition-transform">
+                    Get Started
+                </button>
+</div>
+</div>
+</nav>
+<!-- Hero Section with Perspective Layering -->
+<main class="relative pt-32 pb-20 overflow-hidden min-h-screen flex flex-col justify-center">
+<!-- Background Grid & Elements -->
+<div class="absolute inset-0 obsidian-grid opacity-30 -z-10"></div>
+<div class="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] -z-10 animate-pulse"></div>
+<div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-tertiary/5 rounded-full blur-[120px] -z-10"></div>
+<div class="max-w-7xl mx-auto px-6 w-full grid lg:grid-cols-2 gap-12 items-center">
+<div class="z-10">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant/15 mb-6">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span class="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant">DevDuelARENA_v2.6.4_STABLE</span>
+</div>
+<h1 class="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8 text-on-surface">
+                    CODE.<br/>BATTLE.<br/><span class="text-primary">DOMINATE.</span>
+</h1>
+<p class="text-xl text-on-surface-variant max-w-lg mb-10 leading-relaxed">
+                    The elite competitive programming arena for serious engineers. Real-time head-to-head syntax battles with sub-ms latency.
+                </p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-primary hover:bg-primary/90 text-on-primary px-8 py-4 rounded-lg font-bold transition-all flex items-center gap-3 active:scale-95 shadow-lg shadow-primary/20">
+                        ENTER THE ARENA <span class="material-symbols-outlined">bolt</span>
+</button>
+<button class="bg-surface-container-high border border-outline-variant/20 hover:bg-surface-container-highest text-on-surface px-8 py-4 rounded-lg font-bold transition-all active:scale-95">
+                        VIEW RANKINGS
+                    </button>
+</div>
+<!-- Hero Stats -->
+<div class="mt-16 flex gap-12 border-t border-outline-variant/10 pt-8">
+<div>
+<div class="text-2xl font-bold mono">1,420</div>
+<div class="text-[10px] uppercase tracking-widest text-on-surface-variant mono">Live Sessions</div>
+</div>
+<div>
+<div class="text-2xl font-bold mono text-tertiary">460</div>
+<div class="text-[10px] uppercase tracking-widest text-on-surface-variant mono">Active Coders</div>
+</div>
+<div>
+<div class="text-2xl font-bold mono">99.9%</div>
+<div class="text-[10px] uppercase tracking-widest text-on-surface-variant mono">Uptime</div>
+</div>
+</div>
+</div>
+<!-- Perspective IDE Visualization -->
+<div class="perspective-container hidden lg:block">
+<div class="terminal-3d glass-panel rounded-xl overflow-hidden shadow-2xl relative">
+<div class="bg-surface-container-highest px-4 py-3 flex items-center justify-between border-b border-outline-variant/10">
+<div class="flex gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-error/40"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-secondary-container"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary/40"></div>
+</div>
+<div class="text-[10px] font-mono text-on-surface-variant tracking-widest">DUEL_VS_KRONOS_X.PY</div>
+<div class="w-12"></div>
+</div>
+<div class="p-6 font-mono text-sm leading-relaxed min-h-[400px] bg-surface-container-lowest">
+<div class="flex gap-4">
+<span class="text-on-surface-variant/30 select-none">01</span>
+<span><span class="text-tertiary">def</span> <span class="text-primary">solve_binary_tree</span>(root):</span>
+</div>
+<div class="flex gap-4 bg-primary-container/10 border-l-2 border-primary">
+<span class="text-on-surface-variant/30 select-none">02</span>
+<span>    <span class="text-on-surface-variant"># Analyzing path complexity...</span></span>
+</div>
+<div class="flex gap-4">
+<span class="text-on-surface-variant/30 select-none">03</span>
+<span>    queue = [(root, <span class="text-primary">0</span>)]</span>
+</div>
+<div class="flex gap-4">
+<span class="text-on-surface-variant/30 select-none">04</span>
+<span>    <span class="text-tertiary">while</span> queue:</span>
+</div>
+<div class="flex gap-4">
+<span class="text-on-surface-variant/30 select-none">05</span>
+<span>        node, level = queue.<span class="text-primary">pop</span>(<span class="text-primary">0</span>)</span>
+</div>
+<!-- Floating HUD Overlay -->
+<div class="absolute bottom-8 right-8 w-48 glass-panel p-4 rounded-lg animate-pulse border-primary/30">
+<div class="text-[9px] uppercase tracking-tighter text-primary mb-2">AI Analysis Overlay</div>
+<div class="h-1 bg-surface-variant rounded-full overflow-hidden mb-2">
+<div class="h-full bg-primary w-2/3"></div>
+</div>
+<div class="text-[10px] text-on-surface-variant">Complexity: O(N)</div>
+<div class="text-[10px] text-tertiary">Efficiency: 98%</div>
+</div>
+<!-- Real Time Sync Alert -->
+<div class="absolute top-20 right-[-20px] bg-tertiary text-on-tertiary px-3 py-1 rounded-sm text-[10px] font-bold shadow-xl rotate-12">
+                            SYNC: 4ms
+                        </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Ticker -->
+<div class="mt-20 border-y border-outline-variant/10 bg-surface-container-low/50 py-3 overflow-hidden whitespace-nowrap">
+<div class="flex animate-marquee gap-12 font-mono text-xs text-on-surface-variant/80">
+<span>&gt; ZER0_DAY defeated SYNTAX_ERROR 2s ago</span>
+<span class="text-tertiary">&gt; ALGO_GOD gained +25 ELO 8s ago</span>
+<span>&gt; NEW_CHALLENGE: Binary Tree Reversal (Hard) started 15s ago</span>
+<span>&gt; SYSTEM: v2.4.0 Deployment Successful</span>
+<span class="text-primary">&gt; ARENA_MASTER currently on 12-win streak</span>
+<span>&gt; ZER0_DAY defeated SYNTAX_ERROR 2s ago</span>
+<span class="text-tertiary">&gt; ALGO_GOD gained +25 ELO 8s ago</span>
+</div>
+</div>
+</main>
+<!-- Core Systems Bento Grid -->
+<section class="py-24 bg-surface px-6">
+<div class="max-w-7xl mx-auto">
+<div class="mb-16">
+<h2 class="text-4xl font-bold tracking-tight mb-4">Core Systems</h2>
+<p class="text-on-surface-variant max-w-xl">Precision-engineered runtime for zero-latency competitive execution.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Tech Spec Card 1 -->
+<div class="surface-container-low p-8 rounded-xl border border-outline-variant/5 hover:border-primary/20 transition-all group">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 text-primary">
+<span class="material-symbols-outlined">timer</span>
+</div>
+<h3 class="text-xl font-bold mb-3">Ultra-Low Latency</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Our proprietary 'Neon-Wire' socket layer ensures sub-10ms round-trip execution for real-time visual feedback.</p>
+<div class="font-mono text-[10px] text-primary bg-primary/5 p-3 rounded">
+                        AVG_RTT: 4.2ms<br/>JITTER: &lt; 0.1ms
+                    </div>
+</div>
+<!-- Tech Spec Card 2 -->
+<div class="surface-container p-8 rounded-xl border border-outline-variant/10 hover:border-tertiary/20 transition-all relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-tertiary/5 blur-2xl"></div>
+<div class="w-12 h-12 rounded-lg bg-tertiary/10 flex items-center justify-center mb-6 text-tertiary">
+<span class="material-symbols-outlined">memory</span>
+</div>
+<h3 class="text-xl font-bold mb-3">Isomorphic Runtime</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">Execution environments are mirrored exactly between local and arena servers using containerized micro-kernels.</p>
+<div class="flex gap-2">
+<span class="px-2 py-1 rounded bg-surface-container-highest font-mono text-[9px]">V8_TURBO</span>
+<span class="px-2 py-1 rounded bg-surface-container-highest font-mono text-[9px]">WASM_CORE</span>
+</div>
+</div>
+<!-- Tech Spec Card 3 -->
+<div class="surface-container-low p-8 rounded-xl border border-outline-variant/5 hover:border-primary/20 transition-all">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 text-primary">
+<span class="material-symbols-outlined">shield</span>
+</div>
+<h3 class="text-xl font-bold mb-3">Anti-Cheat Engine</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-6">AI-driven key-cadence analysis and packet inspection ensure that every line of code is human-crafted in real-time.</p>
+<div class="font-mono text-[10px] text-error bg-error/5 p-3 rounded">
+                        THREAT_LEVEL: NOMINAL<br/>ACTIVE_SCAN: 100%
+                    </div>
+</div>
+</div>
+</div>
+</section>
+<!-- Tactical Edge - AI Tools -->
+<section class="py-24 bg-surface-container-lowest px-6 relative overflow-hidden">
+<div class="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+<div class="relative">
+<img alt="Code interface" class="rounded-xl shadow-2xl opacity-80 border border-outline-variant/20" data-alt="Modern dark software code editor on high-resolution monitor with dramatic neon blue and emerald green syntax highlighting highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUmWEx_BnhgZQIu4JOakJRP7cz_d2EvmaOzp-G5RqrZd8GKKKDwaqS8LAlz-8Gx6krdDicQP8t_o7eb6Dgp9BXRUDRcbTpJ5Uq5W64Vs230AqyYcfUYVxK9TCyIPfvFJr_zezznEXRQHQehdNAF-SeoyxDRL7a0-WhAtLYjyLwLqARhJ4lcopFdYdXLvIGMgxAziu5bpS_knyW3c8ktV1DiH2IMQRRDHapWYBc90-RhcFzopb5lAiG9NSKvv3vH3oSs0jao4FTIQo"/>
+<div class="absolute -bottom-8 -right-8 glass-panel p-6 rounded-xl border-tertiary/20 max-w-xs">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-tertiary">psychology</span>
+<span class="font-bold text-sm">Neural Suggestion</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed mb-4">Advanced heuristics predict the optimal algorithmic path before you even finish the function signature.</p>
+<div class="text-[10px] font-mono text-tertiary">OPTIMIZING: 0(log n)</div>
+</div>
+</div>
+<div>
+<h2 class="text-4xl font-bold tracking-tight mb-6">Tactical Edge</h2>
+<p class="text-on-surface-variant text-lg leading-relaxed mb-8">Elevate your competitive performance with integrated AI tooling built specifically for high-speed problem solving.</p>
+<ul class="space-y-6">
+<li class="flex items-start gap-4">
+<div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-1 shrink-0">
+<span class="material-symbols-outlined text-[14px] text-primary">check</span>
+</div>
+<div>
+<h4 class="font-bold mb-1">Live Heuristic Analysis</h4>
+<p class="text-sm text-on-surface-variant">Real-time Big-O analysis of your current solution as you type.</p>
+</div>
+</li>
+<li class="flex items-start gap-4">
+<div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-1 shrink-0">
+<span class="material-symbols-outlined text-[14px] text-primary">check</span>
+</div>
+<div>
+<h4 class="font-bold mb-1">Predictive Debugging</h4>
+<p class="text-sm text-on-surface-variant">Auto-detect edge cases and logic flaws before running the test suite.</p>
+</div>
+</li>
+<li class="flex items-start gap-4">
+<div class="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-1 shrink-0">
+<span class="material-symbols-outlined text-[14px] text-primary">check</span>
+</div>
+<div>
+<h4 class="font-bold mb-1">Adaptive HUD</h4>
+<p class="text-sm text-on-surface-variant">A custom interface that highlights opponent progress and bottleneck points.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- Rankings Table -->
+<section class="py-24 px-6 bg-surface">
+<div class="max-w-7xl mx-auto">
+<div class="flex justify-between items-end mb-12">
+<div>
+<h2 class="text-4xl font-bold tracking-tight mb-4">The Elite</h2>
+<p class="text-on-surface-variant">Current seasonal rankings. The top 0.01% of global engineering talent.</p>
+</div>
+<div class="hidden sm:block">
+<span class="font-mono text-[10px] text-on-surface-variant/40 tracking-widest uppercase">Last Update: Just Now</span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-separate border-spacing-y-2">
+<thead>
+<tr class="text-[10px] font-mono uppercase tracking-widest text-on-surface-variant">
+<th class="px-6 py-4 font-medium">Rank</th>
+<th class="px-6 py-4 font-medium">Engineer</th>
+<th class="px-6 py-4 font-medium">ELO Rating</th>
+<th class="px-6 py-4 font-medium">Streak</th>
+<th class="px-6 py-4 font-medium">Tech Stack</th>
+<th class="px-6 py-4 font-medium">Status</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<td class="px-6 py-5 font-mono text-primary font-bold">#01</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-bold text-xs">Z</div>
+<span class="font-bold">ZER0_DAY</span>
+</div>
+</td>
+<td class="px-6 py-5 font-mono">2,840</td>
+<td class="px-6 py-5 text-tertiary font-bold">12 🔥</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 rounded bg-surface-container-high text-[10px] font-mono">RUST</span>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-tertiary/10 text-tertiary text-[10px] font-bold">
+<span class="w-1 h-1 rounded-full bg-tertiary"></span> IN_ARENA
+                                </span>
+</td>
+</tr>
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<td class="px-6 py-5 font-mono text-primary font-bold">#02</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-bold text-xs">A</div>
+<span class="font-bold">ALGO_GOD</span>
+</div>
+</td>
+<td class="px-6 py-5 font-mono">2,715</td>
+<td class="px-6 py-5 text-on-surface-variant font-bold">3 -</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 rounded bg-surface-container-high text-[10px] font-mono">CPP</span>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant text-[10px] font-bold">
+                                    OFFLINE
+                                </span>
+</td>
+</tr>
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer group">
+<td class="px-6 py-5 font-mono text-primary font-bold">#03</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/20 flex items-center justify-center font-bold text-xs">S</div>
+<span class="font-bold">SYNTAX_ERROR</span>
+</div>
+</td>
+<td class="px-6 py-5 font-mono">2,698</td>
+<td class="px-6 py-5 text-tertiary font-bold">7 🔥</td>
+<td class="px-6 py-5">
+<span class="px-2 py-1 rounded bg-surface-container-high text-[10px] font-mono">GO</span>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-tertiary/10 text-tertiary text-[10px] font-bold">
+<span class="w-1 h-1 rounded-full bg-tertiary"></span> IN_ARENA
+                                </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Call to Action -->
+<section class="py-32 px-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-primary/5 -z-10"></div>
+<div class="max-w-4xl mx-auto text-center">
+<h2 class="text-5xl md:text-6xl font-black tracking-tighter mb-8 italic-none">READY FOR DEPLOYMENT?</h2>
+<p class="text-xl text-on-surface-variant mb-12">The arena doesn't care about your resume. Only your syntax matters.</p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button class="bg-primary text-on-primary px-10 py-5 rounded-lg font-bold text-lg active:scale-95 transition-transform">
+                    START MATCHMAKING
+                </button>
+<button class="bg-surface-container-high border border-outline-variant/20 text-on-surface px-10 py-5 rounded-lg font-bold text-lg active:scale-95 transition-transform">
+                    JOIN THE DISCORD
+                </button>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-[#131313] border-t border-[#424754]/15">
+<div class="flex flex-col md:flex-row justify-between items-center py-8 px-6 max-w-7xl mx-auto gap-4 font-['JetBrains_Mono'] text-[10px] uppercase tracking-widest text-[#e5e2e1]/40">
+<div>
+                © 2024 DevDuel Arena • System: Operational • v2.4.0-stable
+            </div>
+<div class="flex gap-8">
+<a class="hover:text-[#4edea3] transition-colors" href="#">Status</a>
+<a class="hover:text-[#4edea3] transition-colors" href="#">GitHub</a>
+<a class="hover:text-[#4edea3] transition-colors" href="#">Changelog</a>
+<a class="hover:text-[#4edea3] transition-colors" href="#">Security</a>
+</div>
+</div>
+</footer>
+<style>
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: flex;
+            width: fit-content;
+            animation: marquee 30s linear infinite;
+        }
+        
+        /* Smooth Fade In */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reveal {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+    </style>
+</body></html>

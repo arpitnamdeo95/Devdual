@@ -4,6 +4,7 @@ import LobbyDashboard from './pages/LobbyDashboard';
 import BattleArena from './pages/BattleArena';
 import SpectatorView from './pages/SpectatorView';
 import AIReview from './pages/AIReview';
+import UserProfile from './pages/UserProfile';
 import { Documentation, PrivacyPolicy, TermsOfService, Resources } from './components/ContentPages';
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
 
           {/* App shell — lobby, arena, spectator, review */}
           <Route path="/app" element={<LobbyDashboard />} />
+          <Route path="/profile" element={<UserProfile />} />
           <Route path="/arena/:roomId" element={<BattleArena />} />
           <Route path="/watch/:roomId" element={<SpectatorView />} />
           <Route path="/review/:matchId" element={<AIReview />} />

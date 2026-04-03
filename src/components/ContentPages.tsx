@@ -1,3 +1,4 @@
+import { AppNavbar, AppSidebar } from './AppLayout';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Navbar } from './Navbar';
@@ -13,48 +14,31 @@ interface ContentPageProps {
   content: React.ReactNode;
 }
 
+import { Link, useNavigate } from 'react-router-dom';
+
 const ContentPageLayout: React.FC<ContentPageProps> = ({ title, subtitle, icon, content }) => {
+  const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#e5e2e1] font-[Inter] flex flex-col relative overflow-hidden">
-      <LiquidEther />
-      <BackgroundElements />
-      <Navbar />
+    <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+      
+      <AppNavbar />
 
-      <main className="flex-1 p-6 pt-32 max-w-4xl mx-auto w-full relative z-10 mb-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-full bg-primary-container/10 border border-primary-container/30 flex items-center justify-center">
-              {icon}
-            </div>
-            <div>
-              <p className="text-meta text-primary-container font-bold tracking-[0.2em]">{subtitle}</p>
-              <h1 className="text-4xl md:text-6xl font-[Space_Grotesk] font-black uppercase text-white tracking-tighter">
-                {title}
-              </h1>
+      <div className="flex pt-16 min-h-screen">
+        <AppSidebar />
+
+        <main className="flex-1 bg-surface-container-lowest p-8 overflow-y-auto">
+          <div className="max-w-7xl mx-auto space-y-8">
+            <header className="flex justify-between items-end">
+              <div>
+                <h1 className="text-3xl font-extrabold tracking-tighter text-on-surface uppercase">{title}</h1>
+                <p className="text-on-surface-variant font-mono text-sm mt-1">{subtitle}</p>
+              </div>
+            </header>
+            <div className="bg-surface-container rounded-xl p-8 text-on-surface">
+               {content}
             </div>
           </div>
-
-          <div className="glass-panel border border-outline-variant/30 p-8 md:p-12 prose prose-invert max-w-none prose-headings:font-[Space_Grotesk] prose-headings:uppercase prose-headings:tracking-wider prose-p:text-on-surface-variant prose-p:leading-relaxed">
-            {content}
-          </div>
-          
-          <motion.div 
-            className="mt-12 flex justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-          >
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-outline-variant/30 to-transparent" />
-          </motion.div>
-        </motion.div>
-      </main>
-
-      <div className="relative z-50">
-        <LiveTicker />
+        </main>
       </div>
     </div>
   );
