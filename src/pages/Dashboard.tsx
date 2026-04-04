@@ -62,8 +62,9 @@ export default function Dashboard() {
             </section>
 
             {/* Quick Access Links */}
-            <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <section className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {[
+                { label: 'Boss Fight', path: '/boss-select', icon: 'swords_out', desc: 'Single-player PvE campaigns' },
                 { label: 'Match History', path: '/history', icon: 'history', desc: 'Browse the global combat log' },
                 { label: 'Leaderboard', path: '/leaderboard', icon: 'leaderboard', desc: 'Top player rankings & ELO' },
                 { label: 'Achievements', path: '/achievements', icon: 'military_tech', desc: 'Your badges and milestones' },
