@@ -92,6 +92,11 @@ export default function BattleArena() {
     const onGameEnd = (data: any) => {
       const won = data.winnerId === socket.id;
       setGameResult({ won, message: won ? '🏆 YOU WIN!' : '💀 YOU LOST' });
+      sessionStorage.setItem('reviewData', JSON.stringify({
+        winnerCode: data.winningCode,
+        loserCode: data.loserCode,
+        problemDescription: data.problemDescription || ''
+      }));
       setPhase('ended');
     };
 

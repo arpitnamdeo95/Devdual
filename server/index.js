@@ -8,6 +8,7 @@ const { exec }   = require('child_process');
 const fs         = require('fs');
 const path       = require('path');
 const os         = require('os');
+const { GoogleGenAI } = require('@google/genai');
 
 const app    = express();
 const server = http.createServer(app);
@@ -118,14 +119,72 @@ app.post('/api/execute', async (req, res) => {
 });
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   POST /api/review  (mocked)
+   POST /api/review  (Gemini Analysis)
 ───────────────────────────────────────────────────────────────────────────── */
-app.post('/api/review', (_req, res) => {
-  res.json({
-    winnerAdvantage: 'Player wrote cleaner, more efficient code with O(n) time complexity.',
-    loserMistakes:   'Opponent used a nested loop resulting in O(n^2) time complexity.',
-    suggestions:     'Consider using a hash map to optimize lookups.',
-  });
+app.post('/api/review', async (req, res) => {
+  const { winnerCode, loserCode, problemDescription } = req.body;
+
+  if (!winnerCode || !loserCode) {
+    return res.status(400).json({ error: 'Missing winner or loser code' });
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+    const prompt = `
+You are an expert programming judge. Analyze the winner's and loser's code for a coding challenge.
+Problem Description:
+${problemDescription || 'Not provided'}
+
+Winner's Code:
+${winnerCode}
+
+Loser's Code:
+${loserCode}
+
+Evaluate both submissions. Return a JSON object strictly conforming to this structure, without any markdown formatting or extra text:
+{
+  "complexityComparison": "A 1-2 sentence comparison of time and space complexity.",
+  "winnerAdvantage": "A 1-2 sentence explanation of what the winner did better.",
+  "loserMistakes": "A 1-2 sentence explanation of the loser's mistakes or inefficiencies.",
+  "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"],
+  "winnerScore": <number between 0 and 100>,
+  "loserScore": <number between 0 and 100>
+}`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json'
+      }
+    });
+
+    const resultText = response.text; // Note: with @google/genai SDK, it's response.text not text()
+    let data;
+    try {
+      data = JSON.parse(resultText);
+    } catch (e) {
+      if (resultText.includes('\`\`\`json')) {
+        const match = resultText.match(/\`\`\`json([\s\S]*?)\`\`\`/);
+        if (match) data = JSON.parse(match[1]);
+      }
+    }
+
+    if (!data) throw new Error("Failed to parse JSON from AI response");
+
+    res.json(data);
+  } catch (err) {
+    console.error('[review] Gemini error:', err?.message);
+    res.json({
+      complexityComparison: 'Optimization failed to analyze.',
+      winnerAdvantage: 'Player completed the challenge successfully.',
+      loserMistakes: 'Opponent was slower to solve.',
+      suggestions: ['Keep practicing data structures', 'Review edge cases', 'Optimize logic'],
+      winnerScore: 100,
+      loserScore: 50
+    });
+  }
 });
 
 setupSockets(io);

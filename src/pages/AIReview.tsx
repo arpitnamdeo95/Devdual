@@ -57,7 +57,7 @@ export default function AIReview() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
-  const [review, setReview] = useState<Record<string, string> | null>(null);
+  const [review, setReview] = useState<any>(null);
   const [activePanel, setActivePanel] = useState<'analysis' | 'code' | 'suggestions'>('analysis');
 
   useEffect(() => {
@@ -75,15 +75,30 @@ export default function AIReview() {
   }, [loading]);
 
   useEffect(() => {
-    // Simulated fetch - replace with real API if available
-    setTimeout(() => {
-      setReview({
-        winnerAdvantage: "The winner utilized an O(n) Hash Map approach, eliminating the need for nested iterations. Code structure adhered to clean-code principles with descriptive naming and modular logic.",
-        loserMistakes: "The implementation relied on O(n²) nested loops, causing significant performance degradation on larger datasets. Lack of boundary checks for null inputs resulted in fragile execution.",
-        suggestions: "Prioritize space-time tradeoffs by leveraging hash-based lookups. Implementing defensive programming patterns will improve the 'Edge Case' score significantly."
-      });
+    const stored = sessionStorage.getItem('reviewData');
+    if (!stored) {
+      setReview({ winnerAdvantage: "No match data found.", loserMistakes: "No match data found.", suggestions: ["Play a match first!"] });
       setLoading(false);
-    }, 3600);
+      return;
+    }
+    const reqBody = JSON.parse(stored);
+    const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
+    
+    fetch(`${BACKEND_URL}/api/review`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reqBody)
+    })
+    .then(res => res.json())
+    .then(data => {
+      setReview(data);
+      setLoading(false);
+    })
+    .catch(err => {
+      console.error(err);
+      setReview({ error: "Failed to fetch AI analysis." });
+      setLoading(false);
+    });
   }, [matchId]);
 
   return (
@@ -151,27 +166,16 @@ export default function AIReview() {
 
 <div className="bg-surface-container-low rounded-xl p-6 border border-white/5 flex flex-col justify-between">
 <div>
-<h3 className="text-sm font-bold text-on-surface uppercase tracking-wider mb-4">Complexity</h3>
+<h3 className="text-sm font-bold text-on-surface uppercase tracking-wider mb-4">Complexity Analysis</h3>
 <div className="space-y-4">
-<div className="flex justify-between items-center">
-<span className="text-xs text-zinc-500 font-mono">Time</span>
-<span className="text-lg font-mono text-primary">O(n log n)</span>
-</div>
-<div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-<div className="bg-primary h-full w-[40%]"></div>
-</div>
-<div className="flex justify-between items-center">
-<span className="text-xs text-zinc-500 font-mono">Space</span>
-<span className="text-lg font-mono text-tertiary">O(n)</span>
-</div>
-<div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-<div className="bg-tertiary h-full w-[75%]"></div>
+<div className="text-sm text-zinc-400 leading-relaxed">
+{review?.complexityComparison || 'Analyzing complexity...'}
 </div>
 </div>
 </div>
 <div className="mt-8 pt-4 border-t border-white/5 text-[11px] text-zinc-500 leading-relaxed italic">
-                            Optimal solution identified. Memory usage is slightly above average due to auxiliary recursive stack.
-                        </div>
+  Scores: Winner {review?.winnerScore || 0}/100 | You {review?.loserScore || 0}/100
+</div>
 </div>
 </div>
 
@@ -241,23 +245,31 @@ export default function AIReview() {
 </div>
 </div>
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 <div className="space-y-4">
-<h4 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Efficiency Bottlenecks</h4>
+<h4 className="text-xs font-black text-primary uppercase tracking-[0.2em]">Winner Advantage</h4>
 <div className="bg-surface-container rounded-lg p-5 border-l-4 border-primary">
-<div className="font-bold text-sm mb-1">Heap Allocation Overhead</div>
 <p className="text-xs text-zinc-400 leading-relaxed">
-                                Frequent allocation of dynamic arrays during the sorting phase is causing cache misses. Consider pre-allocating the buffer for massive data sets.
-                            </p>
+    {review?.winnerAdvantage || 'Loading advantage...'}
+</p>
 </div>
 </div>
 <div className="space-y-4">
-<h4 className="text-xs font-black text-tertiary uppercase tracking-[0.2em]">Optimization Tips</h4>
-<div className="bg-surface-container rounded-lg p-5 border-l-4 border-tertiary">
-<div className="font-bold text-sm mb-1">Bitwise Operations</div>
+<h4 className="text-xs font-black text-error uppercase tracking-[0.2em]">Loser Mistakes</h4>
+<div className="bg-surface-container rounded-lg p-5 border-l-4 border-error">
 <p className="text-xs text-zinc-400 leading-relaxed">
-                                Replace power calculations with bit-shifting where possible. In the current context, this would yield a ~4ms performance gain.
-                            </p>
+    {review?.loserMistakes || 'Loading mistakes...'}
+</p>
+</div>
+</div>
+<div className="space-y-4">
+<h4 className="text-xs font-black text-tertiary uppercase tracking-[0.2em]">Specific Suggestions</h4>
+<div className="space-y-3">
+    {(review?.suggestions || []).map((s: string, i: number) => (
+        <div key={i} className="bg-surface-container rounded-lg p-4 border-l-4 border-tertiary">
+            <p className="text-[11px] text-zinc-400 leading-relaxed">{s}</p>
+        </div>
+    ))}
 </div>
 </div>
 </div>

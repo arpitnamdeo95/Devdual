@@ -206,9 +206,16 @@ module.exports = function setupSockets(io) {
       // Record the winning code
       room.code[socket.id] = code;
 
+      // Identify the opponent
+      const [p1, p2] = room.players || [];
+      const opponentId = (p1?.id === socket.id) ? p2?.id : p1?.id;
+      const loserCode = opponentId ? (room.code[opponentId] || '# No code submitted') : '';
+
       io.to(roomId).emit('game-end', {
         winnerId:    socket.id,
         winningCode: code,
+        loserCode:   loserCode,
+        problemDescription: room.problem?.description || ''
       });
 
       console.log(`[Win] ${socket.id} won room ${roomId}`);
