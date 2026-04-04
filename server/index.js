@@ -8,26 +8,82 @@ const axios = require('axios');
 
 const app = express();
 const server = http.createServer(app);
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:4173',
+  /\.vercel\.app$/,
+  /\.netlify\.app$/,
+  /\.ngrok-free\.app$/,
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true,
   }
 });
 
-app.use(cors());
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
+
+// Health check — used by Render to confirm server is alive
+app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+app.get('/', (req, res) => res.json({ service: 'DevDuel Backend', status: 'running' }));
+
 
 // Routes
 app.post('/api/execute', async (req, res) => {
-  const { code, language_id } = req.body;
-  // This would talk to Judge0 API. Mock for now
+  const { code, language = 'python', testCases } = req.body;
+  
+  if (!code || !testCases || !testCases.length) {
+    return res.status(400).json({ success: false, message: "Missing code or test cases." });
+  }
+
   try {
-    // For demo, immediately pass or fail based on code content containing "console.log"
-    const passed = code.includes('console.log') || code.includes('return');
-    res.json({ success: passed, message: passed ? "Test cases passed!" : "Test cases failed." });
+    const results = [];
+    let allPassed = true;
+
+    for (const testCase of testCases) {
+      const payloadCode = `
+${code}
+
+try:
+    result = solve(${testCase.input})
+    print(result)
+except Exception as e:
+    print("Error:", str(e))
+`;
+
+      const response = await axios.post('https://emkc.org/api/v2/piston/execute', {
+          language: 'python',
+          version: '3.10.0',
+          files: [{ content: payloadCode }]
+      });
+
+      const runData = response.data.run;
+      const output = (runData.stdout || '').trim();
+      const expected = testCase.expectedOutput.trim();
+      // Code 0 indicates successful execution without syntax/runtime crashing before output
+      const passed = output === expected && runData.code === 0;
+
+      if (!passed) allPassed = false;
+
+      results.push({
+          passed,
+          input: testCase.input,
+          expected,
+          actual: output,
+          stderr: runData.stderr,
+      });
+    }
+
+    res.json({ success: allPassed, results });
   } catch (error) {
-    res.status(500).json({ error: "Execution failed" });
+    console.error("Execution failed:", error?.message);
+    res.status(500).json({ error: "Execution failed via Piston API" });
   }
 });
 

@@ -18,6 +18,7 @@ function App() {
           {/* App shell — lobby, arena, spectator, review */}
           <Route path="/app" element={<LobbyDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/arena/matchmaking" element={<BattleArena />} />
           <Route path="/arena/:roomId" element={<BattleArena />} />
           <Route path="/watch/:roomId" element={<SpectatorView />} />
           <Route path="/review/:matchId" element={<AIReview />} />

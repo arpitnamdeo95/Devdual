@@ -82,8 +82,9 @@ export default function LobbyDashboard() {
 <button className="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg text-sm font-semibold hover:bg-surface-bright transition-all">
                             EXPORT_LOGS
                         </button>
-<button onClick={isSearching ? handleCancelSearch : handleFindMatch} className={`px-4 py-2 ${isSearching ? 'bg-error text-on-error' : 'bg-gradient-to-b from-primary to-primary-container text-on-primary'} rounded-lg text-sm font-bold shadow-lg shadow-primary/10 hover:brightness-110 transition-all`}>
-    {isSearching ? `CANCEL (${searchTime}s)` : 'NEW_BATTLE'}
+<button onClick={() => navigate('/arena/matchmaking')} className="px-4 py-2 bg-gradient-to-b from-primary to-primary-container text-on-primary rounded-lg text-sm font-bold shadow-lg shadow-primary/10 hover:brightness-110 transition-all flex items-center gap-2">
+    <span className="material-symbols-outlined text-[18px]">swords</span>
+    NEW_BATTLE
 </button>
 </div>
 </header>

@@ -1,3 +1,5 @@
+const problems = require('./problems');
+
 // Simple in-memory Redis backup for matchmaking & state
 const queue = [];
 const rooms = {};
@@ -15,12 +17,13 @@ module.exports = function setupSockets(io) {
         const p1 = queue.shift();
         const p2 = queue.shift();
         const roomId = `room_${Date.now()}_${Math.random().toString(36).substr(2,9)}`;
+        const problem = problems[Math.floor(Math.random() * problems.length)];
         
-        rooms[roomId] = { players: [p1, p2], code: {}, spectators: [] };
+        rooms[roomId] = { players: [p1, p2], code: {}, spectators: [], problem };
         
         // Notify players
-        io.to(p1.id).emit('match-found', { roomId, opponent: p2 });
-        io.to(p2.id).emit('match-found', { roomId, opponent: p1 });
+        io.to(p1.id).emit('match-found', { roomId, opponent: p2, problem });
+        io.to(p2.id).emit('match-found', { roomId, opponent: p1, problem });
       }
     });
 
@@ -30,8 +33,12 @@ module.exports = function setupSockets(io) {
       
       if (rooms[roomId]) {
         if (isSpectator) rooms[roomId].spectators.push(socket.id);
-        // Send initial state
-        socket.emit('room-state', rooms[roomId]);
+        // Send full state including problem and players list
+        socket.emit('room-state', {
+          players: rooms[roomId].players,
+          problem: rooms[roomId].problem,
+          code:    rooms[roomId].code,
+        });
       }
     });
 
@@ -40,6 +47,11 @@ module.exports = function setupSockets(io) {
         rooms[roomId].code[socket.id] = code;
         socket.to(roomId).emit('opponent-code-update', { id: socket.id, code });
       }
+    });
+
+    socket.on('test-progress', ({ roomId, passedCount, totalCount }) => {
+      const progress = (passedCount / totalCount) * 100;
+      socket.to(roomId).emit('opponent-progress', { progress });
     });
 
     socket.on('submit-code', ({ roomId, code }) => {
