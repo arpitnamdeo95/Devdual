@@ -42,7 +42,7 @@ export default function BattleArena() {
   const [hasTestcaseDisable, setHasTestcaseDisable] = useState(true);
   const [isFrozen, setIsFrozen] = useState(false);
   const [testcaseDisabled, setTestcaseDisabled] = useState(false);
-  const [activePowerupAnim, setActivePowerupAnim] = useState<{type: string, byMe: boolean} | null>(null);
+  const [activePowerupAnim, setActivePowerupAnim] = useState<{type: string, byMe: boolean, userName?: string} | null>(null);
 
   /* ── is this a direct demo URL? ─────────────────────────── */
   const isDemoRoom = urlRoomId === 'demo';
@@ -96,9 +96,9 @@ export default function BattleArena() {
       setPhase('ended');
     };
 
-    const onPowerupActivated = (data: { type: string, userId: string }) => {
-      const { type } = data;
-      setActivePowerupAnim({ type, byMe: false });
+    const onPowerupActivated = (data: { type: string, userId: string, userName?: string }) => {
+      const { type, userName } = data;
+      setActivePowerupAnim({ type, byMe: false, userName });
       setTimeout(() => setActivePowerupAnim(null), 3000);
 
       if (type === 'freeze') {
@@ -174,7 +174,7 @@ export default function BattleArena() {
     if (type === 'testcase') setHasTestcaseDisable(false);
 
     socket.emit('use-powerup', { roomId: actualRoomId.current, type });
-    setActivePowerupAnim({ type, byMe: true });
+    setActivePowerupAnim({ type, byMe: true, userName: myName.current });
     setTimeout(() => setActivePowerupAnim(null), 3000);
   };
 
@@ -423,7 +423,7 @@ export default function BattleArena() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/40 backdrop-blur-sm transition-all">
            <div className={`text-6xl md:text-9xl font-black italic tracking-tighter uppercase text-center animate-bounce drop-shadow-[0_0_40px_rgba(255,255,255,0.8)] ${activePowerupAnim.type === 'freeze' ? 'text-blue-400' : 'text-purple-400'}`}>
               <div className="text-3xl md:text-5xl mb-4 text-white">
-                {activePowerupAnim.byMe ? "YOU CAST" : "OPPONENT CAST"}
+                {activePowerupAnim.byMe ? "YOU CAST" : `${activePowerupAnim.userName || "OPPONENT"} CAST`}
               </div>
               {activePowerupAnim.type === 'freeze' ? '❄️ FREEZE ❄️' : '👁️ BLIND 👁️'}
            </div>

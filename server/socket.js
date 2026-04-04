@@ -180,9 +180,15 @@ module.exports = function setupSockets(io) {
 
     // ── Power up broadcast ───────────────────────────────────────────────────
     socket.on('use-powerup', ({ roomId, type }) => {
+      const room = rooms[roomId];
+      let userName = 'Opponent';
+      if (room && room.players) {
+        const player = room.players.find(p => p.id === socket.id);
+        if (player && player.name) userName = player.name;
+      }
       // Emit to the opponent that a powerup was used against them
-      socket.to(roomId).emit('powerup-activated', { type, userId: socket.id });
-      console.log(`[Powerup] ${socket.id} used ${type} in room ${roomId}`);
+      socket.to(roomId).emit('powerup-activated', { type, userId: socket.id, userName });
+      console.log(`[Powerup] ${userName} (${socket.id}) used ${type} in room ${roomId}`);
     });
 
     // ── Solution submitted — declare a winner ────────────────────────────────
