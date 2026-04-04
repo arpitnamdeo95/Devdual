@@ -516,10 +516,21 @@ export default function BattleArena() {
             Play Again
           </button>
           <button
-            onClick={() => navigate(`/review/${actualRoomId.current || urlRoomId}`)}
+            onClick={() => navigate(`/review/${actualRoomId.current || urlRoomId}`, {
+              state: {
+                code,
+                language,
+                problemTitle: problem?.title || '',
+                problemDescription: problem?.description || '',
+                myProgress,
+                oppProgress,
+                opponentName: opponent.name,
+                won: gameResult?.won,
+              }
+            })}
             className="flex-1 py-3 bg-surface-container-high text-on-surface rounded-xl font-bold hover:bg-surface-bright transition-all border border-white/10"
           >
-            View Review
+            🤖 AI Coach Review
           </button>
         </div>
       </div>

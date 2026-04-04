@@ -118,8 +118,89 @@ app.post('/api/execute', async (req, res) => {
 });
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   POST /api/review  (mocked)
+   POST /api/ai-review  (Gemini-powered AI Code Coach)
 ───────────────────────────────────────────────────────────────────────────── */
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+app.post('/api/ai-review', async (req, res) => {
+  const { code, language = 'python', problemTitle = '', problemDescription = '' } = req.body;
+
+  if (!code) {
+    return res.status(400).json({ error: 'No code provided.' });
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    // Fallback to a high-quality mock if no API key is configured
+    return res.json({
+      timeComplexity: 'O(n)',
+      spaceComplexity: 'O(n)',
+      complexityExplanation: 'The solution iterates through the input once using a hash map for constant-time lookups, resulting in linear time complexity. The hash map itself uses O(n) additional space.',
+      overallScore: 72,
+      codeSmells: [
+        { severity: 'warning', title: 'Non-descriptive variable names', description: 'Variables like `x`, `i`, `tmp` make the code harder to maintain. Use descriptive names like `current_sum` or `target_index`.', line: null },
+        { severity: 'info', title: 'Missing edge case handling', description: 'The solution does not handle empty input or single-element arrays. Adding guard clauses improves robustness.', line: null },
+      ],
+      strengths: [
+        'Correct use of hash-based lookup for O(1) average access time',
+        'Clean function signature with proper return type',
+        'Solution handles the base test cases correctly',
+      ],
+      alternatives: [
+        { name: 'Two-Pointer Technique', complexity: 'O(n log n)', description: 'If the input can be sorted, a two-pointer approach from both ends eliminates the need for extra space. Trade-off: O(n log n) time but O(1) space.', pseudocode: 'sort(arr)\nleft, right = 0, len(arr)-1\nwhile left < right:\n  if arr[left] + arr[right] == target:\n    return [left, right]\n  elif sum < target: left++\n  else: right--' },
+        { name: 'Bit Manipulation', complexity: 'O(n)', description: 'For specific constraint sets (e.g., positive integers within a known range), bitwise operations can achieve the same result with lower constant factors.', pseudocode: 'bitmask = 0\nfor num in arr:\n  complement = target - num\n  if bitmask & (1 << complement):\n    return pair\n  bitmask |= (1 << num)' },
+      ],
+      summary: 'Your solution is functionally correct and uses an efficient algorithmic approach. Focus on improving code readability with better variable names and adding defensive edge-case checks to level up your competitive coding style.',
+    });
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+    const prompt = `You are an elite competitive programming coach analyzing a post-match code submission. The player just finished a 1v1 coding duel.
+
+PROBLEM: "${problemTitle}"
+${problemDescription ? `DESCRIPTION: ${problemDescription}` : ''}
+LANGUAGE: ${language}
+CODE:
+\`\`\`${language}
+${code}
+\`\`\`
+
+Analyze this code and return a JSON object (no markdown, no code fences, ONLY valid JSON) with exactly these fields:
+{
+  "timeComplexity": "Big O time complexity (e.g. O(n), O(n²), O(n log n))",
+  "spaceComplexity": "Big O space complexity",
+  "complexityExplanation": "2-3 sentence explanation of WHY this is the complexity",
+  "overallScore": <number 0-100 representing code quality>,
+  "codeSmells": [
+    {"severity": "warning|info|error", "title": "short title", "description": "detailed explanation", "line": <line number or null>}
+  ],
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "alternatives": [
+    {"name": "technique name", "complexity": "O(...)", "description": "why this approach is better/different", "pseudocode": "brief pseudocode"}
+  ],
+  "summary": "2-3 sentence overall coaching summary with actionable advice"
+}
+
+Be specific to the ACTUAL code submitted. Identify real issues, not generic advice. If the code uses brute force, suggest DP or greedy alternatives. Limit to 2-4 code smells and 1-3 alternatives.`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+
+    // Strip potential markdown code fences
+    const cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+
+    return res.json(parsed);
+  } catch (err) {
+    console.error('[ai-review] Gemini API error:', err?.message);
+    return res.status(500).json({ error: 'AI analysis failed: ' + (err?.message || 'unknown error') });
+  }
+});
+
+/* Legacy endpoint kept for backwards compat */
 app.post('/api/review', (_req, res) => {
   res.json({
     winnerAdvantage: 'Player wrote cleaner, more efficient code with O(n) time complexity.',
