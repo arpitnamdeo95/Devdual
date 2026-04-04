@@ -10,8 +10,15 @@ const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${Str
 
 /* ─────────────────────────────────────────────────────────── */
 export default function BattleArena() {
-  const { roomId } = useParams<{ roomId: string }>();
+  const { roomId: urlRoomId } = useParams<{ roomId: string }>();
   const navigate    = useNavigate();
+
+  /* ── actualRoomId: comes from socket 'match-found' event, NOT the URL
+     URL stays '/arena/matchmaking' the whole time; real roomId is from server */
+  const actualRoomId = useRef<string>('');
+
+  /* Backend URL — Render in production, localhost in dev */
+  const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
 
   /* ── phase: 'waiting' | 'searching' | 'picking' | 'battle' | 'ended' */
   const [phase, setPhase]               = useState<'waiting'|'searching'|'picking'|'battle'|'ended'>('waiting');
@@ -30,19 +37,16 @@ export default function BattleArena() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const myName = useRef(`Player_${Math.floor(Math.random() * 9000) + 1000}`);
 
-  /* ── is this a "direct entry" demo URL? ─────────────────── */
-  const isDemoRoom = roomId === 'demo';
+  /* ── is this a direct demo URL? ─────────────────────────── */
+  const isDemoRoom = urlRoomId === 'demo';
 
   /* ── socket listeners ─────────────────────────────────────── */
   useEffect(() => {
-    // If we came here via matchmaking (non-demo), join the room immediately
-    if (!isDemoRoom && roomId) {
-      socket.emit('join-room', { roomId, isSpectator: false });
-    }
-
     const onMatchFound = (data: any) => {
+      // Store the real roomId from server (URL still says 'matchmaking')
+      actualRoomId.current = data.roomId;
       setOpponent({ name: data.opponent?.name || 'Opponent' });
-      // Don't set problem yet — wait for question selection phase
+      // Don't set problem here — question selection comes next
     };
 
     const onQuestionOptions = (data: any) => {
@@ -102,7 +106,7 @@ export default function BattleArena() {
       socket.off('opponent-progress', onOpponentProgress);
       socket.off('game-end', onGameEnd);
     };
-  }, [roomId, isDemoRoom]);
+  }, []);  // empty deps — listeners are set once on mount
 
   /* ── search timer ─────────────────────────────────────────── */
   useEffect(() => {
@@ -121,9 +125,9 @@ export default function BattleArena() {
   /* ── broadcast code changes (debounced) ───────────────────── */
   useEffect(() => {
     if (phase !== 'battle') return;
-    const h = setTimeout(() => socket.emit('code-update', { roomId, code }), 300);
+    const h = setTimeout(() => socket.emit('code-update', { roomId: actualRoomId.current, code }), 300);
     return () => clearTimeout(h);
-  }, [code, roomId, phase]);
+  }, [code, phase]);
 
   /* ── actions ──────────────────────────────────────────────── */
   const handleFindMatch = () => {
@@ -143,7 +147,7 @@ export default function BattleArena() {
     setIsTesting(true);
     setTestResults([]);
     try {
-      const res  = await fetch('http://localhost:4000/api/execute', {
+      const res  = await fetch(`${BACKEND_URL}/api/execute`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ code, testCases: problem.testCases }),
@@ -154,7 +158,7 @@ export default function BattleArena() {
       const passed   = results.filter(r => r.passed).length;
       const progress = problem.testCases.length > 0 ? (passed / problem.testCases.length) * 100 : 0;
       setMyProgress(progress);
-      socket.emit('test-progress', { roomId, passedCount: passed, totalCount: problem.testCases.length });
+      socket.emit('test-progress', { roomId: actualRoomId.current, passedCount: passed, totalCount: problem.testCases.length });
     } catch (e) {
       setTestResults([{ passed: false, actual: 'Server unreachable.', expected: '', input: '' }]);
     }
@@ -165,7 +169,7 @@ export default function BattleArena() {
     if (!problem?.testCases) return;
     setIsSubmitting(true);
     try {
-      const res  = await fetch('http://localhost:4000/api/execute', {
+      const res  = await fetch(`${BACKEND_URL}/api/execute`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ code, testCases: problem.testCases }),
@@ -176,14 +180,14 @@ export default function BattleArena() {
       const passed   = results.filter(r => r.passed).length;
       const progress = problem.testCases.length > 0 ? (passed / problem.testCases.length) * 100 : 0;
       setMyProgress(progress);
-      socket.emit('test-progress', { roomId, passedCount: passed, totalCount: problem.testCases.length });
+      socket.emit('test-progress', { roomId: actualRoomId.current, passedCount: passed, totalCount: problem.testCases.length });
       if (data.success) {
-        socket.emit('submit-code', { roomId, code });
+        socket.emit('submit-code', { roomId: actualRoomId.current, code });
       } else {
         alert(`Only ${passed}/${problem.testCases.length} test cases passed. Fix your solution!`);
       }
     } catch (e) {
-      alert('Execution server unreachable. Is the backend running?');
+      alert('Execution server unreachable.');
     }
     setIsSubmitting(false);
   };
@@ -311,7 +315,7 @@ export default function BattleArena() {
             {/* ── PHASE: PICKING — Question selector overlay ── */}
             {phase === 'picking' && questionOptions.length > 0 && (
               <QuestionSelector
-                roomId={roomId}
+                roomId={actualRoomId.current}
                 options={questionOptions}
                 opponentName={opponent.name}
                 onFinalQuestion={(q) => {
@@ -362,7 +366,7 @@ export default function BattleArena() {
             Play Again
           </button>
           <button
-            onClick={() => navigate(`/review/${roomId}`)}
+            onClick={() => navigate(`/review/${actualRoomId.current || urlRoomId}`)}
             className="flex-1 py-3 bg-surface-container-high text-on-surface rounded-xl font-bold hover:bg-surface-bright transition-all border border-white/10"
           >
             View Review
