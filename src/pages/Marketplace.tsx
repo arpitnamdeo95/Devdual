@@ -69,12 +69,12 @@ export default function Marketplace() {
     },
   ]);
 
-  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   const buyPowerUp = (id: string) => {
     const itemIndex = powerUps.findIndex(p => p.id === id);
     if (itemIndex === -1) return;
-    
+
     const item = powerUps[itemIndex];
     if (points >= item.price) {
       setPoints(prev => prev - item.price);
@@ -102,18 +102,17 @@ export default function Marketplace() {
       <div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden">
         <AppSidebar />
         <main className="flex-1 bg-surface-container-lowest p-8 overflow-y-auto relative">
-          
+
           <AnimatePresence>
             {notification && (
               <motion.div
                 initial={{ opacity: 0, y: -20, x: '-50%' }}
                 animate={{ opacity: 1, y: 0, x: '-50%' }}
                 exit={{ opacity: 0, y: -20, x: '-50%' }}
-                className={`fixed top-24 left-1/2 z-50 px-6 py-3 rounded-lg font-code text-sm uppercase tracking-widest shadow-xl border ${
-                  notification.type === 'success' 
+                className={`fixed top-24 left-1/2 z-50 px-6 py-3 rounded-lg font-code text-sm uppercase tracking-widest shadow-xl border ${notification.type === 'success'
                     ? 'bg-primary-container/20 border-primary-container text-primary-container'
                     : 'bg-error/20 border-error text-error'
-                }`}
+                  }`}
               >
                 {notification.message}
               </motion.div>
@@ -131,7 +130,7 @@ export default function Marketplace() {
                   <span className="material-symbols-outlined text-tertiary">toll</span>
                   <div className="flex flex-col">
                     <span className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest">Available Points</span>
-                    <motion.span 
+                    <motion.span
                       key={points}
                       initial={{ scale: 1.2, color: '#00F2FF' }}
                       animate={{ scale: 1, color: '#e5e2e1' }}
@@ -144,44 +143,11 @@ export default function Marketplace() {
               </div>
             </header>
 
-            {/* Featured Section with Superplane */}
-            <div className="relative h-[300px] rounded-2xl overflow-hidden border border-primary-container/20 shadow-2xl group">
-              <div className="absolute inset-0 z-0">
-                <Superplane 
-                  colorA="#00181a" 
-                  colorB="#003d40" 
-                  glowColor="#00f2ff" 
-                  scale={[15, 10, 1]} 
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent z-10" />
-              
-              <div className="relative z-20 h-full p-10 flex flex-col justify-center max-w-2xl">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-2 py-0.5 bg-primary-container text-background text-[10px] font-bold uppercase tracking-widest rounded flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[12px] animate-pulse">new_releases</span>
-                    LEGENDARY_DROP
-                  </span>
-                </div>
-                <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter mb-4 leading-none">
-                  PHANTOM_LINK
-                </h2>
-                <p className="text-on-surface-variant text-lg font-medium max-w-md mb-6">
-                  Forge a ghost connection to the enemy server. Instantly mirror their last valid submission into your editor.
-                </p>
-                <div className="flex items-center gap-4">
-                  <button className="px-8 py-3 bg-white text-black font-bold uppercase tracking-widest text-sm hover:bg-primary-container transition-all flex items-center gap-2">
-                    <span className="material-symbols-outlined">bolt</span>
-                    OWN_NOW: 2500_PTS
-                  </button>
-                  <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Limited availability: 03 Left</span>
-                </div>
-              </div>
-            </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {powerUps.map((item) => (
-                <motion.div 
+                <motion.div
                   key={item.id}
                   whileHover={{ y: -4, boxShadow: '0 20px 40px -15px rgba(0,0,0,0.5)' }}
                   className="bg-surface-container-low border border-outline-variant/5 rounded-xl overflow-hidden group flex flex-col"
@@ -189,11 +155,11 @@ export default function Marketplace() {
                 >
                   <div className="p-6 flex-1 flex flex-col relative">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                       <span className="material-symbols-outlined text-8xl" style={{ color: item.color }}>{item.icon}</span>
+                      <span className="material-symbols-outlined text-8xl" style={{ color: item.color }}>{item.icon}</span>
                     </div>
 
                     <div className="flex justify-between items-start mb-6 rounded-md relative z-10">
-                      <div 
+                      <div
                         className="w-14 h-14 rounded-lg flex items-center justify-center shadow-lg"
                         style={{ backgroundColor: `${item.color}20`, border: `1px solid ${item.color}40` }}
                       >
@@ -216,17 +182,16 @@ export default function Marketplace() {
 
                   <div className="p-4 border-t border-outline-variant/10 bg-surface-container flex justify-between items-center z-10 gap-4">
                     <div className="flex items-center gap-2">
-                       <span className="material-symbols-outlined text-tertiary">toll</span>
-                       <span className="font-bold font-mono text-lg">{item.price}</span>
+                      <span className="material-symbols-outlined text-tertiary">toll</span>
+                      <span className="font-bold font-mono text-lg">{item.price}</span>
                     </div>
-                    <button 
+                    <button
                       onClick={() => buyPowerUp(item.id)}
                       disabled={points < item.price}
-                      className={`px-6 py-2 rounded font-code text-xs uppercase tracking-widest font-bold transition-all flex-1 ${
-                        points >= item.price 
+                      className={`px-6 py-2 rounded font-code text-xs uppercase tracking-widest font-bold transition-all flex-1 ${points >= item.price
                           ? 'bg-white text-background hover:bg-primary-container disabled:opacity-50'
                           : 'bg-surface-container-highest text-on-surface-variant cursor-not-allowed border border-outline-variant/10'
-                      }`}
+                        }`}
                     >
                       {points >= item.price ? 'Purchase' : 'Need Points'}
                     </button>
