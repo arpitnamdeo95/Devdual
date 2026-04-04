@@ -1,55 +1,85 @@
 require('dotenv').config();
-const express = require('express');
-const http = require('http');
-const cors = require('cors');
+const express    = require('express');
+const http       = require('http');
+const cors       = require('cors');
 const { Server } = require('socket.io');
 const setupSockets = require('./socket');
+const { exec }   = require('child_process');
+const fs         = require('fs');
+const path       = require('path');
+const os         = require('os');
 
-const app = express();
+const app    = express();
 const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] }
-});
+const io     = new Server(server, { cors: { origin: '*', methods: ['GET', 'POST'] } });
 
 app.use(cors());
 app.use(express.json());
 
-app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
-app.get('/', (req, res) => res.json({ service: 'DevDuel Backend', status: 'running' }));
+app.get('/health', (_req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+app.get('/',       (_req, res) => res.json({ service: 'DevDuel Backend', status: 'running' }));
 
-// ── Code execution via child_process (runs directly on server, no external API) ─
-const { exec } = require('child_process');
-const fs   = require('fs');
-const path = require('path');
-const os   = require('os');
-
-/**
- * Writes code to a temp file, executes it, returns { stdout, stderr, exitCode }.
- * Kills the process after 10 seconds to prevent infinite loops hanging Render.
- */
+/* ─────────────────────────────────────────────────────────────────────────────
+   runCode(code, lang)
+   Writes `code` to a temp file, executes it, returns { stdout, stderr, exitCode }.
+   Times out after 10 s to prevent infinite loops from hanging Render.
+───────────────────────────────────────────────────────────────────────────── */
 function runCode(code, lang) {
   return new Promise((resolve) => {
     const ext     = lang === 'javascript' ? 'js' : 'py';
     const tmpFile = path.join(os.tmpdir(), `dd_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`);
-    // python3 on Render (Linux), python on Windows
-    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
-    const cmd       = lang === 'javascript' ? `node "${tmpFile}"` : `${pythonCmd} "${tmpFile}"`;
+    const pyCmd   = process.platform === 'win32' ? 'python' : 'python3';
+    const cmd     = lang === 'javascript' ? `node "${tmpFile}"` : `${pyCmd} "${tmpFile}"`;
 
     fs.writeFileSync(tmpFile, code, 'utf8');
 
     exec(cmd, { timeout: 10000 }, (err, stdout, stderr) => {
       try { fs.unlinkSync(tmpFile); } catch (_) {}
       resolve({
-        stdout:   stdout || '',
-        stderr:   stderr || (err && !stderr ? err.message : ''),
+        stdout:   stdout  || '',
+        stderr:   stderr  || (err && !stderr ? err.message : ''),
         exitCode: err ? (err.code ?? 1) : 0,
       });
     });
   });
 }
 
-// Routes
+/* ─────────────────────────────────────────────────────────────────────────────
+   buildCode(userCode, input, lang)
+   Wraps the user's solution with a test-runner that calls solve() and prints.
+───────────────────────────────────────────────────────────────────────────── */
+function buildCode(userCode, input, lang) {
+  if (lang === 'javascript') {
+    return [
+      userCode,
+      '',
+      'try {',
+      `  const result = solve(${input});`,
+      '  process.stdout.write(String(result) + "\\n");',
+      '} catch (e) {',
+      '  process.stderr.write("Error: " + e.message + "\\n");',
+      '  process.exit(1);',
+      '}',
+    ].join('\n');
+  }
+
+  // Python (default)
+  return [
+    userCode,
+    '',
+    'try:',
+    `    result = solve(${input})`,
+    '    print(result)',
+    'except Exception as e:',
+    '    import sys',
+    '    print("Error:", str(e), file=sys.stderr)',
+    '    sys.exit(1)',
+  ].join('\n');
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   POST /api/execute
+───────────────────────────────────────────────────────────────────────────── */
 app.post('/api/execute', async (req, res) => {
   const { code, language = 'python', testCases } = req.body;
 
@@ -58,57 +88,47 @@ app.post('/api/execute', async (req, res) => {
   }
 
   try {
-    const results = [];
-    let allPassed = true;
+    const results  = [];
+    let allPassed  = true;
 
-    for (const testCase of testCases) {
-      let fullCode = '';
-
-      if (language === 'javascript') {
-        fullCode = `${code}\ntry {\n  const result = solve(${testCase.input});\n  process.stdout.write(String(result) + "\\n");\n} catch(e) {\n  process.stderr.write("Error: " + e.message + "\\n");\n  process.exit(1);\n}\n`;
-      } else {
-        // Python (default)
-        fullCode = `${code}\ntry:\n    result = solve(${testCase.input})\n    print(result)\nexcept Exception as e:\n    import sys\n    print("Error:", str(e), file=sys.stderr)\n    sys.exit(1)\n`;
-      }
-
+    for (const tc of testCases) {
+      const fullCode              = buildCode(code, tc.input, language);
       const { stdout, stderr, exitCode } = await runCode(fullCode, language);
+
       const output   = stdout.trim();
-      const expected = String(testCase.expectedOutput).trim();
+      const expected = String(tc.expectedOutput).trim();
       const passed   = output === expected && exitCode === 0;
 
       if (!passed) allPassed = false;
 
       results.push({
         passed,
-        input:    testCase.input,
+        input:    tc.input,
         expected,
         actual:   output || (stderr ? `Error: ${stderr.split('\n')[0]}` : '(no output)'),
         stderr:   stderr ? stderr.trim() : '',
       });
     }
 
-    res.json({ success: allPassed, results });
-  } catch (error) {
-    console.error('Execution failed:', error?.message);
-    res.status(500).json({ error: 'Internal execution error: ' + error.message });
+    return res.json({ success: allPassed, results });
+  } catch (err) {
+    console.error('[execute] error:', err?.message);
+    return res.status(500).json({ error: 'Internal execution error: ' + err.message });
   }
 });
 
-app.post('/api/review', async (req, res) => {
-  try {
-    res.json({
-      winnerAdvantage: 'Player wrote cleaner, more efficient code with O(n) time complexity.',
-      loserMistakes:   'Opponent used a nested loop resulting in O(n^2) time complexity.',
-      suggestions:     'Consider using a hash map to optimize lookups.',
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Review failed' });
-  }
+/* ─────────────────────────────────────────────────────────────────────────────
+   POST /api/review  (mocked)
+───────────────────────────────────────────────────────────────────────────── */
+app.post('/api/review', (_req, res) => {
+  res.json({
+    winnerAdvantage: 'Player wrote cleaner, more efficient code with O(n) time complexity.',
+    loserMistakes:   'Opponent used a nested loop resulting in O(n^2) time complexity.',
+    suggestions:     'Consider using a hash map to optimize lookups.',
+  });
 });
 
 setupSockets(io);
 
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`[server] listening on port ${PORT}`));

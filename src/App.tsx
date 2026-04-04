@@ -7,6 +7,7 @@ import BattleArena from './pages/BattleArena';
 import SpectatorView from './pages/SpectatorView';
 import AIReview from './pages/AIReview';
 import UserProfile from './pages/UserProfile';
+import Marketplace from './pages/Marketplace';
 import { Documentation, PrivacyPolicy, TermsOfService, Resources } from './components/ContentPages';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path="/arena/:roomId" element={<BattleArena />} />
           <Route path="/watch/:roomId" element={<SpectatorView />} />
           <Route path="/review/:matchId" element={<AIReview />} />
+          <Route path="/marketplace" element={<Marketplace />} />
 
           {/* Footer content — policy, docs, etc */}
           <Route path="/docs" element={<Documentation />} />
