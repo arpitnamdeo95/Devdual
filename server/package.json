@@ -8,7 +8,11 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
+<<<<<<< HEAD
+    "@google/generative-ai": "^0.24.1",
+=======
     "@google/genai": "^1.48.0",
+>>>>>>> e62a841c6a04d56b4c804bf33d06a2dc6f0c8a25
     "axios": "^1.6.8",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
