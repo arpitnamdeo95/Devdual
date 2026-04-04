@@ -1,186 +1,323 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { Fingerprint, Lock, ShieldAlert, Cpu } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Login() {
+const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number }[] = [];
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        size: Math.random() * 1.5 + 0.5,
+        opacity: Math.random() * 0.4 + 0.1,
+      });
+    }
+
+    let animId: number;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(173, 198, 255, ${p.opacity})`;
+        ctx.fill();
+      });
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animId);
+    };
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Navigate to app on login
-    navigate('/app');
+    setLoading(true);
+    setTimeout(() => navigate('/app'), 1400);
   };
 
   return (
-    <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary/20 selection:text-primary overflow-hidden relative flex flex-col">
-      {/* Background decorations matching the theme */}
-      <div className="absolute inset-0 bg-noise-overlay opacity-10 pointer-events-none mix-blend-overlay"></div>
-      <div className="absolute inset-0 bg-grid-pattern-cyan opacity-20 pointer-events-none"></div>
-      
-      {/* Top Navbar / Header */}
-      <header className="h-16 flex items-center px-8 border-b border-white/5 relative z-10 shrink-0">
-        <Link to="/" className="flex items-center gap-2 group">
-           <Fingerprint className="w-5 h-5 text-primary group-hover:text-primary-container transition-colors" />
-           <span className="font-display font-black tracking-widest text-[#e5e2e1] uppercase">DEVDUEL</span>
-           <span className="font-mono text-[10px] text-primary/60 tracking-widest mt-1">v1.0.4_KERNEL</span>
-        </Link>
-        <div className="flex-1"></div>
-        <div className="flex gap-4 items-center">
-            <span className="material-symbols-outlined text-primary/50 text-sm">tv</span>
-            <span className="material-symbols-outlined text-primary/50 text-sm">terminal</span>
+    <div
+      className="min-h-screen text-white overflow-hidden relative flex flex-col"
+      style={{ background: '#0a0e14', fontFamily: "'Inter', sans-serif" }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        .login-input {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 10px;
+          color: #f1f3fc;
+          font-size: 14px;
+          padding: 13px 16px;
+          width: 100%;
+          outline: none;
+          transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+          font-family: 'Inter', sans-serif;
+          box-sizing: border-box;
+        }
+        .login-input::placeholder { color: rgba(241,243,252,0.3); }
+        .login-input:focus {
+          border-color: rgba(173,198,255,0.5);
+          background: rgba(255,255,255,0.06);
+          box-shadow: 0 0 0 3px rgba(173,198,255,0.08);
+        }
+        .login-btn-primary {
+          background: linear-gradient(135deg, #4f7aff 0%, #adc6ff 100%);
+          border: none;
+          border-radius: 10px;
+          color: #0a1033;
+          font-weight: 700;
+          font-size: 14px;
+          letter-spacing: 0.05em;
+          padding: 14px 24px;
+          width: 100%;
+          cursor: pointer;
+          transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+          font-family: 'Space Grotesk', sans-serif;
+          box-shadow: 0 0 20px rgba(79,122,255,0.25);
+        }
+        .login-btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 0 30px rgba(79,122,255,0.4); }
+        .login-btn-primary:active { transform: translateY(0); }
+        .login-btn-primary:disabled { opacity: 0.6; transform: none; }
+        .login-btn-secondary {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 10px;
+          color: rgba(241,243,252,0.75);
+          font-size: 13px;
+          padding: 12px 16px;
+          width: 100%;
+          cursor: pointer;
+          transition: background 0.2s, border-color 0.2s, color 0.2s;
+          font-family: 'Inter', sans-serif;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .login-btn-secondary:hover { background: rgba(255,255,255,0.07); border-color: rgba(173,198,255,0.25); color: #f1f3fc; }
+        .form-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(241,243,252,0.4); font-family: 'JetBrains Mono', monospace; }
+        .card-glass {
+          background: rgba(15,20,32,0.8);
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 20px;
+          backdrop-filter: blur(20px);
+          box-shadow: 0 25px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(173,198,255,0.04);
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { animation: spin 0.8s linear infinite; }
+        @keyframes fadeInUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+        .fade-in-up { animation: fadeInUp 0.6s ease forwards; }
+        .fade-in-up-delay { animation: fadeInUp 0.6s ease 0.15s forwards; opacity: 0; }
+        @keyframes pulseGlow { 0%,100% { opacity:0.4; } 50% { opacity:0.7; } }
+        .pulse-glow { animation: pulseGlow 3s ease-in-out infinite; }
+        .obsidian-grid {
+          background-image:
+            linear-gradient(rgba(173,198,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(173,198,255,0.03) 1px, transparent 1px);
+          background-size: 50px 50px;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+      `}</style>
+
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} />
+      <div className="absolute inset-0 obsidian-grid opacity-40" style={{ zIndex: 0 }} />
+      <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full pulse-glow" style={{ background: 'radial-gradient(circle, rgba(79,122,255,0.12) 0%, transparent 70%)', zIndex: 0 }} />
+      <div className="absolute bottom-[-10%] right-[-5%] w-[400px] h-[400px] rounded-full pulse-glow" style={{ background: 'radial-gradient(circle, rgba(173,198,255,0.08) 0%, transparent 70%)', zIndex: 0, animationDelay: '1.5s' }} />
+
+      {/* Nav */}
+      <nav className="relative z-10 flex items-center justify-between px-8 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <span className="material-symbols-outlined" style={{ color: '#adc6ff', fontSize: '22px' }}>terminal</span>
+          <span style={{ color: '#adc6ff', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.02em' }}>DEVDUEL</span>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col lg:flex-row items-center justify-center p-6 lg:p-20 gap-12 lg:gap-24 relative z-10">
-        
-        {/* Left Side: Branding & Info */}
-        <div className="flex-1 max-w-xl space-y-8">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-[#00F2FF] shadow-[0_0_10px_#00F2FF]"></div>
-            <span className="font-mono text-[12px] tracking-widest text-primary font-bold uppercase">System Status: Online</span>
-          </div>
-
-          <div>
-             <h1 className="text-5xl lg:text-7xl font-display font-black tracking-tighter uppercase leading-[0.9]">
-               Access The<br/>
-               <span className="text-primary drop-shadow-[0_0_20px_rgba(0,229,255,0.4)]">Arena</span>
-             </h1>
-          </div>
-
-          <div className="space-y-2 font-mono text-sm text-on-surface-variant">
-            <p>Authenticate to enter the battlefield.</p>
-            <p className="opacity-60">Session encrypted using AES-256 Protocol.</p>
-          </div>
-
-          <div className="border-l-2 border-[#a855f7] bg-[#a855f7]/5 p-4 space-y-2 font-mono text-xs text-on-surface-variant/80 rounded-r-lg shadow-[inset_0_0_20px_rgba(168,85,247,0.05)] border-y border-r border-[#a855f7]/10">
-             <div className="text-[#a855f7] uppercase tracking-widest font-bold mb-2 text-[10px]">Active Threat Feed</div>
-             <div><span className="text-primary mr-2">&gt;</span>pinging local_node_77...</div>
-             <div><span className="text-primary mr-2">&gt;</span>connection established via secure_tunnel</div>
-             <div><span className="text-primary mr-2">&gt;</span>encryption keys rotated successfully</div>
-          </div>
-
-          <div className="flex items-center gap-6 font-mono text-[10px] tracking-widest text-primary uppercase pt-4">
-             <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                Secure Access Enabled
-             </div>
-             <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-tertiary shadow-[0_0_10px_rgba(78,222,163,0.5)]"></span>
-                LAT: 37.7749° N
-             </div>
-          </div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(241,243,252,0.25)', letterSpacing: '0.15em' }}>
+          ARENA_v2.6.4_STABLE
         </div>
+      </nav>
 
-        {/* Right Side: Form */}
-        <div className="w-full max-w-md bg-[#0A0A0A]/90 backdrop-blur-md border border-white/10 p-8 pt-10 rounded-xl relative shadow-2xl before:absolute before:-inset-[1px] before:-z-10 before:rounded-xl before:bg-gradient-to-b before:from-white/10 before:to-transparent">
-           {/* Top Right Corner Accent */}
-           <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-primary/50 rounded-tr-xl"></div>
-           <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-[#a855f7]/40 rounded-bl-xl"></div>
+      {/* Main */}
+      <div className="flex-1 flex items-center justify-center px-4 py-12 relative z-10">
+        <div className="w-full max-w-[480px]">
 
-           <div className="mb-8">
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-on-surface-variant mb-2">
-                 <ShieldAlert className="w-4 h-4 text-primary" />
-                 Identity Verification
-              </div>
-              <h2 className="text-2xl font-display font-black tracking-tight">User Authentication</h2>
-           </div>
+          <div className="fade-in-up flex justify-center mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(173,198,255,0.06)', border: '1px solid rgba(173,198,255,0.12)' }}>
+              <span className="w-2 h-2 rounded-full" style={{ background: '#4ade80', boxShadow: '0 0 6px rgba(74,222,128,0.7)' }} />
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(241,243,252,0.5)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>System Online • Secure Channel Active</span>
+            </div>
+          </div>
 
-           <form onSubmit={handleLogin} className="space-y-6">
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-end">
-                    <label className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Username / Email</label>
-                </div>
-                <div className="relative group">
-                    <input 
-                      type="text" 
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="Enter your identity"
-                      className="w-full bg-[#131313] border border-white/5 rounded-none px-4 py-3 font-mono text-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:border-primary/50 transition-colors"
-                      required
-                    />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant/40 font-mono text-sm">@</div>
-                </div>
-              </div>
+          <div className="fade-in-up text-center mb-8">
+            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: '42px', lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: '10px' }}>
+              Access the{' '}
+              <span style={{ background: 'linear-gradient(135deg, #adc6ff, #4f7aff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Arena</span>
+            </h1>
+            <p style={{ color: 'rgba(241,243,252,0.45)', fontSize: '15px', lineHeight: 1.6 }}>
+              Authenticate to enter the battlefield. Session encrypted with AES-256.
+            </p>
+          </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between items-end">
-                    <label className="font-mono text-[10px] uppercase tracking-widest text-primary font-bold">Password</label>
-                    <a href="#" className="font-mono text-[10px] text-on-surface-variant/60 hover:text-primary transition-colors">Forgot Access Key?</a>
-                </div>
-                <div className="relative group">
-                    <input 
-                      type="password" 
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="Enter access key"
-                      className="w-full bg-[#131313] border border-white/5 rounded-none px-4 py-3 font-mono text-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none focus:border-primary/50 transition-colors"
-                      required
-                    />
-                    <Lock className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/40" />
-                </div>
+          <div className="card-glass fade-in-up-delay p-8">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <label className="form-label">Username / Email</label>
+                <input
+                  type="text"
+                  className="login-input"
+                  placeholder="Enter your identity"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  id="login-email"
+                />
               </div>
 
-              <button 
-                type="submit" 
-                className="w-full bg-primary hover:bg-primary-container text-background font-display font-black uppercase tracking-widest py-4 transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:shadow-[0_0_30px_rgba(0,229,255,0.5)]"
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label className="form-label">Password</label>
+                  <button type="button" style={{ background: 'none', border: 'none', color: 'rgba(173,198,255,0.6)', fontSize: '12px', cursor: 'pointer', fontFamily: "'Inter', sans-serif" }}
+                    onMouseEnter={e => (e.currentTarget.style.color = '#adc6ff')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(173,198,255,0.6)')}
+                  >
+                    Forgot access key?
+                  </button>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="login-input"
+                    placeholder="Enter access key"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    id="login-password"
+                    style={{ paddingRight: '44px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(s => !s)}
+                    style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(241,243,252,0.3)', display: 'flex', alignItems: 'center' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      {showPassword ? (
+                        <>
+                          <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                          <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.2"/>
+                        </>
+                      ) : (
+                        <>
+                          <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                          <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.2"/>
+                          <line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                        </>
+                      )}
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="login-btn-primary"
+                disabled={loading}
+                id="login-submit"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
-                 Enter The Arena
+                {loading ? (
+                  <>
+                    <svg className="spinner" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="6" stroke="rgba(10,16,51,0.4)" strokeWidth="2"/>
+                      <path d="M8 2a6 6 0 016 6" stroke="#0a1033" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    Authenticating...
+                  </>
+                ) : (
+                  <>Enter the Arena <span style={{ fontSize: '16px' }}>⚡</span></>
+                )}
               </button>
+            </form>
 
-              <div className="relative my-6 flex items-center justify-center">
-                 <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/5"></div>
-                 </div>
-                 <div className="relative bg-[#0A0A0A] px-4 font-mono text-[10px] text-on-surface-variant/50 uppercase tracking-widest">
-                    Or Integrate Via
-                 </div>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '24px 0' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(241,243,252,0.25)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>or integrate via</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+            </div>
 
-              <div className="space-y-3">
-                 <button type="button" className="w-full bg-[#1A1A1A] hover:bg-[#222] border border-white/5 py-3 font-mono text-xs flex items-center justify-center gap-3 transition-colors active:scale-[0.98]">
-                    <svg className="w-4 h-4 text-on-surface" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/></svg>
-                    Continue with Google
-                 </button>
-                 <button type="button" className="w-full bg-[#1A1A1A] hover:bg-[#222] border border-white/5 py-3 font-mono text-xs flex items-center justify-center gap-3 transition-colors active:scale-[0.98]">
-                    <svg className="w-4 h-4 text-on-surface" viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10,0,0,0,8.84,21.5c.5.08.66-.23.66-.5V19.31C6.73,19.91,6.14,18,6.14,18A2.69,2.69,0,0,0,5,16.5c-.91-.62.07-.6.07-.6a2.1,2.1,0,0,1,1.53,1,2.15,2.15,0,0,0,2.91.83,2.16,2.16,0,0,1,.63-1.34C8,16.17,5.62,15.31,5.62,11.5a3.87,3.87,0,0,1,1-2.71,3.58,3.58,0,0,1,.1-2.64s.84-.27,2.75,1a9.63,9.63,0,0,1,5,0c1.91-1.29,2.75-1,2.75-1a3.58,3.58,0,0,1,.1,2.64,3.87,3.87,0,0,1,1,2.71c0,3.82-2.34,4.66-4.57,4.91a2.39,2.39,0,0,1,.69,1.85V21c0,.27.16.59.67.5A10,10,0,0,0,12,2Z"/></svg>
-                    Continue with GitHub
-                 </button>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button className="login-btn-secondary" id="login-google">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M14.5 8.17c0-.46-.04-.9-.11-1.33H8v2.52h3.65a3.12 3.12 0 01-1.35 2.05v1.7h2.19c1.28-1.18 2.01-2.92 2.01-4.94z" fill="#4285F4"/>
+                  <path d="M8 15c1.84 0 3.38-.61 4.5-1.65l-2.19-1.7c-.61.41-1.38.65-2.31.65-1.78 0-3.28-1.2-3.82-2.81H1.93v1.75A7 7 0 008 15z" fill="#34A853"/>
+                  <path d="M4.18 9.49A4.22 4.22 0 013.97 8c0-.52.09-1.02.21-1.49V4.76H1.93A7.01 7.01 0 001 8c0 1.13.27 2.2.93 3.24l2.25-1.75z" fill="#FBBC05"/>
+                  <path d="M8 3.58c1 0 1.9.34 2.6 1.01l1.96-1.96A7 7 0 008 1a7 7 0 00-6.07 3.76l2.25 1.75C4.72 4.79 6.22 3.58 8 3.58z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+              </button>
+              <button className="login-btn-secondary" id="login-github">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 1C4.133 1 1 4.133 1 8c0 3.097 2.009 5.73 4.796 6.657.35.065.479-.152.479-.337v-1.179c-1.948.423-2.36-.94-2.36-.94-.319-.81-.778-1.026-.778-1.026-.636-.435.048-.426.048-.426.703.049 1.073.722 1.073.722.625 1.07 1.64.761 2.04.582.064-.453.244-.761.445-.936-1.555-.177-3.19-.777-3.19-3.46 0-.765.273-1.39.72-1.88-.072-.177-.312-.888.069-1.853 0 0 .587-.188 1.923.718A6.71 6.71 0 018 5.33c.595.003 1.194.08 1.754.237 1.334-.906 1.92-.718 1.92-.718.383.965.142 1.676.07 1.853.449.49.72 1.115.72 1.88 0 2.69-1.638 3.281-3.198 3.454.251.217.476.643.476 1.296v1.922c0 .187.127.406.482.337C12.994 13.726 15 11.097 15 8c0-3.867-3.133-7-7-7z"/>
+                </svg>
+                Continue with GitHub
+              </button>
+            </div>
 
-              {/* Terminal Logs in Form */}
-              <div className="mt-8 border border-white/5 bg-[#131313] p-4 font-mono text-[10px] text-primary space-y-1">
-                 <div className="opacity-50"><span className="mr-2">&gt;</span>verifying credentials...</div>
-                 <div className="opacity-100"><span className="mr-2">&gt;</span>awaiting input...</div>
-                 <div className="animate-pulse"><span className="mr-2">&gt;</span>_</div>
-              </div>
+            <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <span style={{ color: 'rgba(241,243,252,0.4)', fontSize: '13px' }}>New participant? </span>
+              <button
+                onClick={() => navigate('/signup')}
+                id="go-to-signup"
+                style={{ background: 'none', border: 'none', color: '#adc6ff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.05em', textDecoration: 'underline', textUnderlineOffset: '3px', fontFamily: "'Inter', sans-serif" }}
+              >
+                Create account
+              </button>
+            </div>
+          </div>
 
-              <div className="text-center pt-2">
-                 <span className="font-mono text-[10px] text-on-surface-variant mr-2">New participant?</span>
-                 <Link to="/signup" className="font-mono text-[10px] text-[#a855f7] hover:text-[#c084fc] uppercase tracking-widest font-bold transition-colors">Create Account</Link>
-              </div>
-
-           </form>
+          <div className="fade-in-up mt-6" style={{ background: 'rgba(10,14,20,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', padding: '12px 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '10px', color: 'rgba(241,243,252,0.2)', letterSpacing: '0.05em' }}>
+            <div>&gt; verifying credentials...</div>
+            <div>&gt; awaiting input...</div>
+            <div style={{ color: 'rgba(173,198,255,0.3)' }}>&gt; <span style={{ animation: 'blink 1s step-end infinite', display: 'inline-block', width: '6px', height: '10px', background: 'rgba(173,198,255,0.4)', verticalAlign: 'middle' }} /></div>
+          </div>
         </div>
-      </main>
+      </div>
 
-      {/* Footer */}
-      <footer className="h-10 flex items-center px-8 border-t border-white/5 bg-background font-mono text-[9px] uppercase tracking-widest text-on-surface-variant/50 shrink-0 relative z-10">
-          <div className="flex-1 flex gap-2 items-center">
-             <span>DEVDUEL V2.6.1</span>
-             <span className="w-1.5 h-1.5 rounded-full bg-primary/50"></span>
-          </div>
-          <div className="flex-1 text-center hidden md:block">
-             System_Status: Nominal &nbsp;&nbsp;&nbsp; All Systems Operational
-          </div>
-          <div className="flex-1 text-right">
-             © 2024 Kinetic Encryption Terminal // All Rights Reserved
-          </div>
-      </footer>
+      <div className="relative z-10" style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '14px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'rgba(241,243,252,0.18)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+          © 2024 DevDuel • v2.6.1
+        </span>
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'rgba(241,243,252,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>System: Nominal</span>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'rgba(241,243,252,0.18)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>All Systems Operational</span>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default Login;
