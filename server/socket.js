@@ -118,6 +118,13 @@ module.exports = function setupSockets(io) {
       }
     });
 
+    // ── Cancel Matchmaking ───────────────────────────────────────────────────
+    socket.on('cancel-match', () => {
+      console.log(`[Queue] ${socket.id} cancelled matchmaking`);
+      const qIdx = queue.findIndex((u) => u.id === socket.id);
+      if (qIdx !== -1) queue.splice(qIdx, 1);
+    });
+
     // ── Player selects a difficulty ──────────────────────────────────────────
     socket.on('player-selected', ({ roomId, difficulty }) => {
       const room = rooms[roomId];
