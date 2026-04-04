@@ -1,6 +1,7 @@
 import { AppNavbar, AppSidebar } from '../components/AppLayout';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Superplane } from '../components/Superplane';
 
 interface PowerUp {
   id: string;
@@ -122,8 +123,8 @@ export default function Marketplace() {
           <div className="max-w-7xl mx-auto space-y-8 pb-12">
             <header className="flex justify-between items-end">
               <div>
-                <h1 className="text-3xl font-extrabold tracking-tighter text-on-surface uppercase">Marketplace</h1>
-                <p className="text-on-surface-variant font-mono text-sm mt-1">ACQUIRE ARSENAL & POWER-UPS</p>
+                <h1 className="text-3xl font-extrabold tracking-tighter text-on-surface uppercase font-display">Marketplace</h1>
+                <p className="text-on-surface-variant font-mono text-sm mt-1 uppercase tracking-[0.2em]">ACQUIRE ARSENAL & POWER-UPS</p>
               </div>
               <div className="flex gap-4 items-center">
                 <div className="flex items-center gap-3 px-6 py-3 bg-surface-container-high border border-outline-variant/10 rounded-xl shadow-lg">
@@ -142,6 +143,41 @@ export default function Marketplace() {
                 </div>
               </div>
             </header>
+
+            {/* Featured Section with Superplane */}
+            <div className="relative h-[300px] rounded-2xl overflow-hidden border border-primary-container/20 shadow-2xl group">
+              <div className="absolute inset-0 z-0">
+                <Superplane 
+                  colorA="#00181a" 
+                  colorB="#003d40" 
+                  glowColor="#00f2ff" 
+                  scale={[15, 10, 1]} 
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent z-10" />
+              
+              <div className="relative z-20 h-full p-10 flex flex-col justify-center max-w-2xl">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="px-2 py-0.5 bg-primary-container text-background text-[10px] font-bold uppercase tracking-widest rounded flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[12px] animate-pulse">new_releases</span>
+                    LEGENDARY_DROP
+                  </span>
+                </div>
+                <h2 className="text-5xl font-black text-white italic uppercase tracking-tighter mb-4 leading-none">
+                  PHANTOM_LINK
+                </h2>
+                <p className="text-on-surface-variant text-lg font-medium max-w-md mb-6">
+                  Forge a ghost connection to the enemy server. Instantly mirror their last valid submission into your editor.
+                </p>
+                <div className="flex items-center gap-4">
+                  <button className="px-8 py-3 bg-white text-black font-bold uppercase tracking-widest text-sm hover:bg-primary-container transition-all flex items-center gap-2">
+                    <span className="material-symbols-outlined">bolt</span>
+                    OWN_NOW: 2500_PTS
+                  </button>
+                  <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Limited availability: 03 Left</span>
+                </div>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {powerUps.map((item) => (
