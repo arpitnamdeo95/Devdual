@@ -83,8 +83,9 @@ export default function LobbyDashboard() {
 <button className="px-4 py-2 bg-secondary-container text-on-secondary-container rounded-lg text-sm font-semibold hover:bg-surface-bright transition-all">
                             EXPORT_LOGS
                         </button>
-<button onClick={isSearching ? handleCancelSearch : handleFindMatch} className={`px-4 py-2 ${isSearching ? 'bg-error text-on-error' : 'bg-gradient-to-b from-primary to-primary-container text-on-primary'} rounded-lg text-sm font-bold shadow-lg shadow-primary/10 hover:brightness-110 transition-all`}>
-    {isSearching ? `CANCEL (${searchTime}s)` : 'NEW_BATTLE'}
+<button onClick={() => navigate('/arena/matchmaking')} className="px-4 py-2 bg-gradient-to-b from-primary to-primary-container text-on-primary rounded-lg text-sm font-bold shadow-lg shadow-primary/10 hover:brightness-110 transition-all flex items-center gap-2">
+    <span className="material-symbols-outlined text-[18px]">swords</span>
+    NEW_BATTLE
 </button>
 </div>
 </header>
@@ -144,10 +145,10 @@ export default function LobbyDashboard() {
 <div className="w-full h-64 relative">
 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 200">
 <defs>
-<lineargradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
-<stop offset="0%" stop-color="#adc6ff" stop-opacity="0.3"></stop>
-<stop offset="100%" stop-color="#adc6ff" stop-opacity="0"></stop>
-</lineargradient>
+<linearGradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stopColor="#adc6ff" stopOpacity="0.3"></stop>
+<stop offset="100%" stopColor="#adc6ff" stopOpacity="0"></stop>
+</linearGradient>
 </defs>
 
 <line stroke="#424754" strokeDasharray="4" strokeWidth="0.5" x1="0" x2="1000" y1="50" y2="50"></line>

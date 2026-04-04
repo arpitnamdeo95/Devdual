@@ -173,6 +173,27 @@ export default {
           '0%': { clipPath: 'inset(0 100% 0 0)', opacity: '0' },
           '100%': { clipPath: 'inset(0 0% 0 0)', opacity: '1' },
         },
+        'powerup-epic': {
+          '0%': { transform: 'scale(1.5)', opacity: '0', filter: 'blur(10px)' },
+          '10%': { transform: 'scale(0.9)', opacity: '1', filter: 'blur(0px)' },
+          '15%': { transform: 'scale(1.05)' },
+          '20%, 80%': { transform: 'scale(1)' },
+          '90%': { transform: 'scale(1.1)', opacity: '1', filter: 'blur(0px)' },
+          '100%': { transform: 'scale(0.5)', opacity: '0', filter: 'blur(10px)' },
+        },
+        'slide-down-fade': {
+          '0%': { transform: 'translateY(-50px)', opacity: '0' },
+          '15%, 85%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'slide-up-fade': {
+          '0%': { transform: 'translateY(50px)', opacity: '0' },
+          '15%, 85%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'scale-up-elastic': {
+          '0%': { transform: 'scale(0.5)' },
+          '10%': { transform: 'scale(1.1)' },
+          '15%, 85%': { transform: 'scale(1)' },
+        },
       },
       animation: {
         marquee: 'marquee 30s linear infinite',
@@ -195,6 +216,10 @@ export default {
         'flicker': 'flicker 4s step-end infinite',
         'ping-slow': 'ping-slow 2s cubic-bezier(0,0,0.2,1) infinite',
         'reveal-from-left': 'reveal-from-left 0.8s ease forwards',
+        'powerup-epic': 'powerup-epic 3s ease-in-out forwards',
+        'slide-down-fade': 'slide-down-fade 3s ease-out forwards',
+        'slide-up-fade': 'slide-up-fade 3s ease-out forwards',
+        'scale-up-elastic': 'scale-up-elastic 3s ease-out forwards',
       }
     },
   },
