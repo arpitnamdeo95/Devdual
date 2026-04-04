@@ -1,3 +1,4 @@
+
 import React, { useRef, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -91,6 +92,7 @@ const SuperplaneMaterial: React.FC<SuperplaneMaterialProps> = ({
   });
 
   return (
+
     <shaderMaterial
       ref={meshRef}
       vertexShader={superPlaneVertexShader}
@@ -126,3 +128,4 @@ export const Superplane: React.FC<{
     </div>
   );
 };
+
