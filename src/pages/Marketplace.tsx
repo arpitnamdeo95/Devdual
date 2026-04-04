@@ -1,7 +1,7 @@
 import { AppNavbar, AppSidebar } from '../components/AppLayout';
+import Superplane from '../components/Superplane';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Superplane } from '../components/Superplane';
 
 interface PowerUp {
   id: string;
@@ -101,8 +101,10 @@ export default function Marketplace() {
       <AppNavbar />
       <div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden">
         <AppSidebar />
-        <main className="flex-1 bg-surface-container-lowest p-8 overflow-y-auto relative">
-
+        <main className="flex-1 bg-surface-container-lowest/50 p-8 overflow-y-auto relative backdrop-blur-sm">
+          <div className="fixed inset-0 z-[-1] opacity-60">
+            <Superplane />
+          </div>
           <AnimatePresence>
             {notification && (
               <motion.div

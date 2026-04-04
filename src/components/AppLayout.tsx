@@ -5,7 +5,7 @@ export function AppNavbar() {
   const path = location.pathname;
   
   return (
-<header className="bg-[#131313] dark:bg-[#131313] border-b border-white/5 flex justify-between items-center w-full px-6 h-16 fixed top-0 z-50">
+<header className="bg-[#131313]/80 backdrop-blur-md border-b border-white/5 flex justify-between items-center w-full px-6 h-16 fixed top-0 z-50">
 <div className="flex items-center gap-8">
 <span className="font-['JetBrains_Mono'] font-bold text-lg tracking-tighter text-[#adc6ff]"><Link to="/">DEVDUEL</Link></span>
 <nav className="hidden md:flex gap-6 items-center">
@@ -34,7 +34,7 @@ export function AppSidebar() {
   const path = location.pathname;
 
   return (
-<aside className="bg-[#1c1b1b] dark:bg-[#1c1b1b] h-[calc(100vh-4rem)] w-20 flex flex-col items-center py-8 gap-6 sticky top-16 shrink-0 z-40">
+<aside className="bg-[#1c1b1b]/60 backdrop-blur-md h-[calc(100vh-4rem)] w-20 flex flex-col items-center py-8 gap-6 sticky top-16 shrink-0 z-40 border-r border-white/5">
 <div className="flex flex-col items-center gap-1 mb-4">
 <span className="text-[#adc6ff] font-black text-xs font-mono">B-742</span>
 </div>
@@ -54,6 +54,10 @@ export function AppSidebar() {
 <button onClick={() => navigate('/review/demo')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 shrink-0 group ${path.includes('/review') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
 <span className="material-symbols-outlined">analytics</span>
 <span className="font-['Inter'] text-[9px] font-semibold uppercase tracking-widest">Stats</span>
+</button>
+<button onClick={() => navigate('/arena/hypergraph')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 shrink-0 group ${path.includes('/hypergraph') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
+<span className="material-symbols-outlined">hub</span>
+<span className="font-['Inter'] text-[9px] font-semibold uppercase tracking-widest">Arena</span>
 </button>
 <button onClick={() => navigate('/docs')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 shrink-0 group ${path.includes('/docs') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
 <span className="material-symbols-outlined">description</span>

@@ -8,7 +8,9 @@ export const SpacetimeDBProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const url = import.meta.env.VITE_SPACETIME_URL || 'ws://localhost:3000';
+    const isProd = import.meta.env.PROD || (typeof window !== 'undefined' && window.location.hostname !== 'localhost');
+    const defaultUrl = isProd ? 'wss://testnet.spacetimedb.com' : 'ws://localhost:3000';
+    const url = import.meta.env.VITE_SPACETIME_URL || defaultUrl;
     // Initialize token inside localStorage for Auth mapping
     let token = localStorage.getItem('spacetime-token');
     
@@ -65,12 +67,11 @@ export const SpacetimeDBProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   return (
     <SpacetimeDBContext.Provider value={connection}>
-      {isConnected ? children : (
-        <div className="min-h-screen flex items-center justify-center bg-background text-on-surface">
-          <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
-            Connecting to SpacetimeDB...
-          </div>
+      {children}
+      {!isConnected && (
+        <div className="fixed bottom-4 right-4 z-[9999] flex items-center gap-2 px-3 py-1.5 bg-[#1c1b1b]/80 backdrop-blur-md rounded-full border border-yellow-500/30 text-[10px] font-mono text-yellow-500/80 uppercase tracking-widest animate-pulse">
+          <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+          Backend Syncing...
         </div>
       )}
     </SpacetimeDBContext.Provider>
@@ -78,17 +79,17 @@ export const SpacetimeDBProvider: React.FC<{ children: React.ReactNode }> = ({ c
 };
 
 export const useSpacetime = () => {
-  const ctx = useContext(SpacetimeDBContext);
-  if (!ctx) throw new Error("useSpacetime must be used within SpacetimeDBProvider");
-  return ctx;
+  return useContext(SpacetimeDBContext);
 };
 
 // Quick hook to trigger re-renders on db events
-export function useSpacetimeData<T>(selector: (db: DbConnection['db']) => T): T {
+export function useSpacetimeData<T>(selector: (db: DbConnection['db']) => T, fallback: T = [] as any): T {
     const conn = useSpacetime();
-    const [data, setData] = useState<T>(() => selector(conn.db));
+    const [data, setData] = useState<T>(() => (conn ? selector(conn.db) : fallback));
 
     useEffect(() => {
+        if (!conn) return;
+        
         // A simple way to re-render when ANY table updates.
         // For production, we'd use useSyncExternalStore or specific table listeners.
         const handleUpdate = () => {
