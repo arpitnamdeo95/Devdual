@@ -142,18 +142,21 @@ ${winnerCode}
 Loser's Code:
 ${loserCode}
 
-Evaluate both submissions. Return a JSON object strictly conforming to this structure, without any markdown formatting or extra text:
+Evaluate both submissions. Return a JSON object strictly conforming to this structure. DO NOT include any markdown code blocks, backticks, or any text other than the JSON:
 {
   "complexityComparison": "A 1-2 sentence comparison of time and space complexity.",
   "winnerAdvantage": "A 1-2 sentence explanation of what the winner did better.",
   "loserMistakes": "A 1-2 sentence explanation of the loser's mistakes or inefficiencies.",
   "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"],
   "winnerScore": <number between 0 and 100>,
-  "loserScore": <number between 0 and 100>
+  "loserScore": <number between 0 and 100>,
+  "optimizedRefactor": "A concise, optimized version of the loser's solution improving efficiency or readability.",
+  "runtimeMs": "A realistic runtime in milliseconds (e.g., 24ms)",
+  "memoryMb": "A realistic memory usage in MB (e.g., 14.2MB)"
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json'
