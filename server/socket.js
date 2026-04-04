@@ -178,6 +178,13 @@ module.exports = function setupSockets(io) {
       socket.to(roomId).emit('opponent-progress', { progress });
     });
 
+    // ── Power up broadcast ───────────────────────────────────────────────────
+    socket.on('use-powerup', ({ roomId, type }) => {
+      // Emit to the opponent that a powerup was used against them
+      socket.to(roomId).emit('powerup-activated', { type, userId: socket.id });
+      console.log(`[Powerup] ${socket.id} used ${type} in room ${roomId}`);
+    });
+
     // ── Solution submitted — declare a winner ────────────────────────────────
     socket.on('submit-code', ({ roomId, code }) => {
       const room = rooms[roomId];

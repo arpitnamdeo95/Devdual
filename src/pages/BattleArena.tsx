@@ -37,6 +37,13 @@ export default function BattleArena() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const myName = useRef(`Player_${Math.floor(Math.random() * 9000) + 1000}`);
 
+  /* ── powerups ─────────────────────────────────────────────── */
+  const [hasFreeze, setHasFreeze] = useState(true);
+  const [hasTestcaseDisable, setHasTestcaseDisable] = useState(true);
+  const [isFrozen, setIsFrozen] = useState(false);
+  const [testcaseDisabled, setTestcaseDisabled] = useState(false);
+  const [activePowerupAnim, setActivePowerupAnim] = useState<{type: string, byMe: boolean} | null>(null);
+
   /* ── is this a direct demo URL? ─────────────────────────── */
   const isDemoRoom = urlRoomId === 'demo';
 
@@ -89,6 +96,20 @@ export default function BattleArena() {
       setPhase('ended');
     };
 
+    const onPowerupActivated = (data: { type: string, userId: string }) => {
+      const { type } = data;
+      setActivePowerupAnim({ type, byMe: false });
+      setTimeout(() => setActivePowerupAnim(null), 3000);
+
+      if (type === 'freeze') {
+        setIsFrozen(true);
+        setTimeout(() => setIsFrozen(false), 10000);
+      } else if (type === 'testcase') {
+        setTestcaseDisabled(true);
+        setTimeout(() => setTestcaseDisabled(false), 30000);
+      }
+    };
+
     socket.on('match-found', onMatchFound);
     socket.on('question-options', onQuestionOptions);
     socket.on('final-question', onFinalQuestion);
@@ -96,6 +117,7 @@ export default function BattleArena() {
     socket.on('opponent-code-update', onOpponentCode);
     socket.on('opponent-progress', onOpponentProgress);
     socket.on('game-end', onGameEnd);
+    socket.on('powerup-activated', onPowerupActivated);
 
     return () => {
       socket.off('match-found', onMatchFound);
@@ -105,6 +127,7 @@ export default function BattleArena() {
       socket.off('opponent-code-update', onOpponentCode);
       socket.off('opponent-progress', onOpponentProgress);
       socket.off('game-end', onGameEnd);
+      socket.off('powerup-activated', onPowerupActivated);
     };
   }, []);  // empty deps — listeners are set once on mount
 
@@ -140,6 +163,19 @@ export default function BattleArena() {
     setPhase('waiting');
     setSearchSec(0);
     socket.emit('cancel-match');
+  };
+
+  const handleUsePowerup = (type: 'freeze' | 'testcase') => {
+    if (phase !== 'battle') return;
+    if (type === 'freeze' && !hasFreeze) return;
+    if (type === 'testcase' && !hasTestcaseDisable) return;
+
+    if (type === 'freeze') setHasFreeze(false);
+    if (type === 'testcase') setHasTestcaseDisable(false);
+
+    socket.emit('use-powerup', { roomId: actualRoomId.current, type });
+    setActivePowerupAnim({ type, byMe: true });
+    setTimeout(() => setActivePowerupAnim(null), 3000);
   };
 
   const handleRunTests = async () => {
@@ -382,9 +418,19 @@ export default function BattleArena() {
   return (
     <div className="h-screen flex flex-col bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
 
-      {phase === 'ended' && <GameOverOverlay />}
+      {/* ── POWERUP OVERLAY ANIMATION ── */}
+      {activePowerupAnim && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/40 backdrop-blur-sm transition-all">
+           <div className={`text-6xl md:text-9xl font-black italic tracking-tighter uppercase text-center animate-bounce drop-shadow-[0_0_40px_rgba(255,255,255,0.8)] ${activePowerupAnim.type === 'freeze' ? 'text-blue-400' : 'text-purple-400'}`}>
+              <div className="text-3xl md:text-5xl mb-4 text-white">
+                {activePowerupAnim.byMe ? "YOU CAST" : "OPPONENT CAST"}
+              </div>
+              {activePowerupAnim.type === 'freeze' ? '❄️ FREEZE ❄️' : '👁️ BLIND 👁️'}
+           </div>
+        </div>
+      )}
 
-      <AppNavbar />
+      {phase === 'ended' && <GameOverOverlay />}      <AppNavbar />
       <div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden">
         <AppSidebar />
 
@@ -461,6 +507,43 @@ export default function BattleArena() {
           {/* ── MAIN BODY: Problem | My Editor | Opponent Editor ── */}
           <div className="flex-1 flex overflow-hidden">
 
+            {/* ── POWERUPS TOOLBAR ── */}
+            <div className="w-16 bg-surface-container shrink-0 border-r border-white/5 flex flex-col items-center py-4 gap-4 z-10 box-border overflow-y-auto code-editor-scrollbar">
+              <div className="text-[10px] font-mono text-on-surface-variant uppercase transform -rotate-90 my-8 tracking-widest text-primary/60">
+                Powerups
+              </div>
+              
+              <button 
+                onClick={() => handleUsePowerup('freeze')}
+                disabled={!hasFreeze || phase !== 'battle'}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative group shrink-0 ${
+                  hasFreeze 
+                    ? 'bg-surface hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
+                    : 'bg-surface text-on-surface-variant opacity-30 cursor-not-allowed border border-white/5'
+                }`}
+              >
+                <div className="absolute left-14 hidden group-hover:flex whitespace-nowrap bg-surface-container-high px-2 py-1 rounded border border-white/10 text-[10px] font-mono shadow-xl z-50">
+                  Freeze Opponent (10s)
+                </div>
+                <span className="material-symbols-outlined text-[20px]">ac_unit</span>
+              </button>
+              
+              <button 
+                onClick={() => handleUsePowerup('testcase')}
+                disabled={!hasTestcaseDisable || phase !== 'battle'}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative group shrink-0 ${
+                  hasTestcaseDisable 
+                    ? 'bg-surface hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.3)]' 
+                    : 'bg-surface text-on-surface-variant opacity-30 cursor-not-allowed border border-white/5'
+                }`}
+              >
+                <div className="absolute left-14 hidden group-hover:flex whitespace-nowrap bg-surface-container-high px-2 py-1 rounded border border-white/10 text-[10px] font-mono shadow-xl z-50">
+                  Blind Testcases (30s)
+                </div>
+                <span className="material-symbols-outlined text-[20px]">visibility_off</span>
+              </button>
+            </div>
+
             {/* ── PROBLEM PANEL ── */}
             <aside className="w-72 shrink-0 bg-surface-container-low border-r border-white/5 overflow-y-auto code-editor-scrollbar">
               <div className="p-5 space-y-5">
@@ -526,13 +609,23 @@ export default function BattleArena() {
               </div>
 
               <div className="flex-1 relative">
+                {isFrozen && (
+                  <div className="absolute inset-0 z-[60] bg-blue-900/20 backdrop-blur-[2px] flex items-center justify-center pointer-events-none border-2 border-blue-500/50">
+                    <div className="text-blue-400 font-black tracking-widest text-4xl animate-pulse drop-shadow-xl flex items-center gap-4">
+                      <span className="material-symbols-outlined text-5xl">ac_unit</span>
+                      FROZEN
+                      <span className="material-symbols-outlined text-5xl">ac_unit</span>
+                    </div>
+                  </div>
+                )}
                 <Editor
                   height="100%"
                   defaultLanguage="python"
                   theme="vs-dark"
                   value={code}
-                  onChange={(v) => setCode(v || '')}
+                  onChange={(v) => !isFrozen && setCode(v || '')}
                   options={{
+                    readOnly: isFrozen,
                     minimap: { enabled: false },
                     fontSize: 13,
                     fontFamily: '"JetBrains Mono", "Fira Code", monospace',
@@ -555,11 +648,18 @@ export default function BattleArena() {
               <div className="h-12 bg-surface-container-high border-t border-white/5 flex items-center gap-3 px-4 shrink-0">
                 <button
                   onClick={handleRunTests}
-                  disabled={isTesting || isSubmitting || phase !== 'battle'}
-                  className="flex items-center gap-2 px-5 py-2 bg-surface-container-highest text-on-surface font-bold text-xs rounded-lg hover:bg-surface-bright disabled:opacity-40 transition-all"
+                  disabled={isTesting || isSubmitting || phase !== 'battle' || testcaseDisabled}
+                  className={`flex items-center gap-2 px-5 py-2 font-bold text-xs rounded-lg transition-all ${
+                    testcaseDisabled 
+                      ? 'bg-purple-900/40 text-purple-400 border border-purple-500/30' 
+                      : 'bg-surface-container-highest text-on-surface hover:bg-surface-bright border border-transparent disabled:opacity-40'
+                  }`}
+                  title={testcaseDisabled ? "Opponent disabled your testcases!" : ""}
                 >
-                  <span className="material-symbols-outlined text-[16px]">play_arrow</span>
-                  {isTesting ? 'Running...' : 'Run Tests'}
+                  <span className="material-symbols-outlined text-[16px]">
+                    {testcaseDisabled ? 'visibility_off' : 'play_arrow'}
+                  </span>
+                  {isTesting ? 'Running...' : testcaseDisabled ? 'BLINDED (30s)' : 'Run Tests'}
                 </button>
                 <button
                   onClick={handleSubmit}
