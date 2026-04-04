@@ -15,6 +15,8 @@ import Achievements from './pages/Achievements';
 import Dashboard from './pages/Dashboard';
 import MatchHistory from './pages/MatchHistory';
 import Leaderboard from './pages/Leaderboard';
+import BossSelection from './pages/BossSelection';
+import BossArena from './pages/BossArena';
 
 function App() {
   return (
@@ -41,6 +43,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/history" element={<MatchHistory />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/boss-select" element={<BossSelection />} />
+            <Route path="/boss-arena/:bossId" element={<BossArena />} />
 
             {/* Footer content — policy, docs, etc */}
             <Route path="/docs" element={<Documentation />} />
