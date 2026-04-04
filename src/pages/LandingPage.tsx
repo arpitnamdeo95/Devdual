@@ -32,13 +32,12 @@ export default function LandingPage() {
 <button onClick={() => navigate('/app')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Compete</button>
 </div>
 </div>
-<div className="flex items-center gap-4">
-<div className="hidden sm:flex gap-4 items-center mr-4">
-<button onClick={() => navigate('/app')} className="material-symbols-outlined text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors cursor-pointer">terminal</button>
-<button onClick={() => navigate('/profile')} className="material-symbols-outlined text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors cursor-pointer">settings</button>
+<div className="flex items-center gap-6">
+<div className="hidden sm:flex gap-4 items-center">
+<button onClick={() => navigate('/login')} className="text-[#e5e2e1]/80 hover:text-[#adc6ff] transition-colors cursor-pointer font-bold text-sm tracking-tight">Log In</button>
 </div>
-<button onClick={() => navigate('/app')} className="bg-gradient-to-v from-primary to-primary-container text-on-primary px-5 py-1.5 rounded-lg text-sm font-bold tracking-tight active:scale-95 transition-transform">
-                    Get Started
+<button onClick={() => navigate('/signup')} className="bg-gradient-to-b from-primary to-primary-container text-on-primary px-5 py-1.5 rounded-lg text-sm font-bold tracking-tight active:scale-95 transition-transform">
+                    Sign Up
                 </button>
 </div>
 </div>
