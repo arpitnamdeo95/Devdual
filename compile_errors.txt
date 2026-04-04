@@ -1,0 +1,54 @@
+﻿src/components/ContentPages.tsx(3,1): error TS6133: 'motion' is declared but its value is never read.
+src/components/ContentPages.tsx(4,1): error TS6133: 'Navbar' is declared but its value is never read.
+src/components/ContentPages.tsx(5,1): error TS6133: 'LiquidEther' is declared but its value is never read.
+src/components/ContentPages.tsx(6,1): error TS6133: 'BackgroundElements' is declared but its value is never read.
+src/components/ContentPages.tsx(7,1): error TS6133: 'LiveTicker' is declared but its value is never read.
+src/components/ContentPages.tsx(17,10): error TS6133: 'Link' is declared but its value is never read.
+src/components/ContentPages.tsx(19,75): error TS6133: 'icon' is declared but its value is never read.
+src/components/ContentPages.tsx(20,9): error TS6133: 'navigate' is declared but its value is never read.
+src/pages/AIReview.tsx(3,35): error TS6133: 'Link' is declared but its value is never read.
+src/pages/AIReview.tsx(4,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+src/pages/AIReview.tsx(5,1): error TS6192: All imports in import declaration are unused.
+src/pages/AIReview.tsx(27,7): error TS6133: 'MetricBar' is declared but its value is never read.
+src/pages/AIReview.tsx(57,9): error TS6133: 'navigate' is declared but its value is never read.
+src/pages/AIReview.tsx(59,10): error TS6133: 'loadingStep' is declared but its value is never read.
+src/pages/AIReview.tsx(60,10): error TS6133: 'review' is declared but its value is never read.
+src/pages/AIReview.tsx(61,10): error TS6133: 'activePanel' is declared but its value is never read.
+src/pages/AIReview.tsx(61,23): error TS6133: 'setActivePanel' is declared but its value is never read.
+src/pages/LandingPage.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(3,23): error TS6133: 'Link' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(4,1): error TS6192: All imports in import declaration are unused.
+src/pages/LobbyDashboard.tsx(6,1): error TS6133: 'Navbar' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(7,1): error TS6133: 'LiquidEther' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(8,1): error TS6133: 'BackgroundElements' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(9,1): error TS6133: 'LiveTicker' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(10,1): error TS6192: All imports in import declaration are unused.
+src/pages/LobbyDashboard.tsx(15,7): error TS6133: 'leaderboardData' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(23,7): error TS6133: 'recentMatches' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(31,10): error TS6133: 'searchTime' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(32,10): error TS6133: 'queueCount' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(33,10): error TS6133: 'activeTab' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(33,21): error TS6133: 'setActiveTab' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(51,9): error TS6133: 'handleFindMatch' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(59,9): error TS6133: 'handleCancelSearch' is declared but its value is never read.
+src/pages/LobbyDashboard.tsx(147,1): error TS2339: Property 'lineargradient' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/LobbyDashboard.tsx(150,1): error TS2339: Property 'lineargradient' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/SpectatorView.tsx(3,35): error TS6133: 'Link' is declared but its value is never read.
+src/pages/SpectatorView.tsx(4,1): error TS6192: All imports in import declaration are unused.
+src/pages/SpectatorView.tsx(5,1): error TS6133: 'Editor' is declared but its value is never read.
+src/pages/SpectatorView.tsx(7,1): error TS6192: All imports in import declaration are unused.
+src/pages/SpectatorView.tsx(19,7): error TS6133: 'spectators' is declared but its value is never read.
+src/pages/SpectatorView.tsx(30,10): error TS6133: 'codes' is declared but its value is never read.
+src/pages/SpectatorView.tsx(33,10): error TS6133: 'result' is declared but its value is never read.
+src/pages/SpectatorView.tsx(34,10): error TS6133: 'showChat' is declared but its value is never read.
+src/pages/SpectatorView.tsx(34,20): error TS6133: 'setShowChat' is declared but its value is never read.
+src/pages/SpectatorView.tsx(35,10): error TS6133: 'soundEnabled' is declared but its value is never read.
+src/pages/SpectatorView.tsx(35,24): error TS6133: 'setSoundEnabled' is declared but its value is never read.
+src/pages/SpectatorView.tsx(36,10): error TS6133: 'spectatorCount' is declared but its value is never read.
+src/pages/SpectatorView.tsx(37,10): error TS6133: 'liveChat' is declared but its value is never read.
+src/pages/SpectatorView.tsx(79,9): error TS6133: 'p1' is declared but its value is never read.
+src/pages/SpectatorView.tsx(80,9): error TS6133: 'p2' is declared but its value is never read.
+src/pages/SpectatorView.tsx(82,9): error TS6133: 'handleSendMessage' is declared but its value is never read.
+src/pages/SpectatorView.tsx(88,9): error TS6133: 'timerColor' is declared but its value is never read.
+src/pages/SpectatorView.tsx(89,9): error TS6133: 'timerPercent' is declared but its value is never read.
+src/pages/SpectatorView.tsx(341,82): error TS2322: Type 'string' is not assignable to type 'boolean | undefined'.
