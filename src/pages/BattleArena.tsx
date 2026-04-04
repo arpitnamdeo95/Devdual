@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { socket } from '../socket';
+import QuestionSelector from '../components/QuestionSelector';
 
 /* ─────────────────────────────────────────────── helpers ─── */
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -12,10 +13,11 @@ export default function BattleArena() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate    = useNavigate();
 
-  /* ── phase: 'waiting' | 'searching' | 'battle' | 'ended' */
-  const [phase, setPhase]               = useState<'waiting'|'searching'|'battle'|'ended'>('waiting');
+  /* ── phase: 'waiting' | 'searching' | 'picking' | 'battle' | 'ended' */
+  const [phase, setPhase]               = useState<'waiting'|'searching'|'picking'|'battle'|'ended'>('waiting');
   const [searchSec, setSearchSec]       = useState(0);
   const [opponent, setOpponent]         = useState<{name:string}>({name:'???'});
+  const [questionOptions, setQuestionOptions] = useState<any[]>([]);
   const [problem, setProblem]           = useState<any>(null);
   const [code, setCode]                 = useState('def solve():\n    pass\n');
   const [opponentCode, setOpponentCode] = useState('# Opponent is coding...\n');
@@ -40,8 +42,19 @@ export default function BattleArena() {
 
     const onMatchFound = (data: any) => {
       setOpponent({ name: data.opponent?.name || 'Opponent' });
-      setProblem(data.problem);
-      setCode(data.problem?.starterCode || 'def solve():\n    pass\n');
+      // Don't set problem yet — wait for question selection phase
+    };
+
+    const onQuestionOptions = (data: any) => {
+      // Switch to picking phase and show the question selector
+      setQuestionOptions(data.options || []);
+      setPhase('picking');
+    };
+
+    const onFinalQuestion = (data: any) => {
+      // Called by QuestionSelector once server resolves the choice
+      setProblem(data);
+      setCode(data?.starterCode || 'def solve():\n    pass\n');
       setPhase('battle');
       setTimer(30 * 60);
     };
@@ -73,6 +86,8 @@ export default function BattleArena() {
     };
 
     socket.on('match-found', onMatchFound);
+    socket.on('question-options', onQuestionOptions);
+    socket.on('final-question', onFinalQuestion);
     socket.on('room-state', onRoomState);
     socket.on('opponent-code-update', onOpponentCode);
     socket.on('opponent-progress', onOpponentProgress);
@@ -80,6 +95,8 @@ export default function BattleArena() {
 
     return () => {
       socket.off('match-found', onMatchFound);
+      socket.off('question-options', onQuestionOptions);
+      socket.off('final-question', onFinalQuestion);
       socket.off('room-state', onRoomState);
       socket.off('opponent-code-update', onOpponentCode);
       socket.off('opponent-progress', onOpponentProgress);
@@ -176,7 +193,7 @@ export default function BattleArena() {
   /* ══════════════════════════════════════════════════════════════
      PHASE: WAITING  (direct demo URL or newly mounted)
   ══════════════════════════════════════════════════════════════ */
-  if (phase === 'waiting' || phase === 'searching') {
+  if (phase === 'waiting' || phase === 'searching' || phase === 'picking') {
     return (
       <div className="h-screen flex flex-col bg-background text-on-surface font-body">
         <AppNavbar />
@@ -289,6 +306,21 @@ export default function BattleArena() {
                   Tip: Open a 2nd browser tab and click "Find Match" to test 1v1 instantly
                 </p>
               </div>
+            )}
+
+            {/* ── PHASE: PICKING — Question selector overlay ── */}
+            {phase === 'picking' && questionOptions.length > 0 && (
+              <QuestionSelector
+                roomId={roomId}
+                options={questionOptions}
+                opponentName={opponent.name}
+                onFinalQuestion={(q) => {
+                  setProblem(q);
+                  setCode(q?.starterCode || 'def solve():\n    pass\n');
+                  setPhase('battle');
+                  setTimer(30 * 60);
+                }}
+              />
             )}
           </main>
         </div>
