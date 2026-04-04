@@ -2,10 +2,29 @@ import React from 'react';
 import { AppNavbar, AppSidebar } from '../components/AppLayout';
 
 export default function UserProfile() {
+    const [isExporting, setIsExporting] = React.useState(false);
+    const [isEditing, setIsEditing] = React.useState(false);
+
+    const handleExport = () => {
+        setIsExporting(true);
+        setTimeout(() => {
+            setIsExporting(false);
+            alert("Data exported successfully!");
+        }, 1500);
+    };
+
+    const handleEdit = () => {
+        setIsEditing(true);
+        setTimeout(() => {
+            setIsEditing(false);
+            alert("Profile preferences saved!");
+        }, 1000);
+    };
+
     return (
-        <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+        <div className="h-screen flex flex-col bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
             <AppNavbar />
-            <div className="flex pt-16 min-h-screen">
+            <div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden">
                 <AppSidebar />
                 <main className="flex-1 bg-surface-container-lowest p-8 overflow-y-auto">
                     <div className="max-w-7xl mx-auto space-y-8">
@@ -15,13 +34,13 @@ export default function UserProfile() {
                                 <p className="text-on-surface-variant font-mono text-sm mt-1">/ SYSTEM_ID: B-742</p>
                             </div>
                             <div className="flex gap-3">
-                                <button className="bg-surface-container hover:bg-surface-container-high transition-colors px-4 py-2 flex items-center gap-2 border border-outline-variant/30 text-on-surface">
-                                    <span className="material-symbols-outlined text-sm text-secondary">share</span>
-                                    <span className="font-mono text-xs font-bold tracking-widest uppercase">EXPORT_DATA</span>
+                                <button onClick={handleExport} disabled={isExporting} className="bg-surface-container hover:bg-surface-container-high transition-colors px-4 py-2 flex items-center gap-2 border border-outline-variant/30 text-on-surface disabled:opacity-50">
+                                    <span className="material-symbols-outlined text-sm text-secondary">{isExporting ? 'hourglass_empty' : 'share'}</span>
+                                    <span className="font-mono text-xs font-bold tracking-widest uppercase">{isExporting ? 'EXPORTING...' : 'EXPORT_DATA'}</span>
                                 </button>
-                                <button className="bg-primary hover:bg-primary-container transition-colors px-6 py-2 flex items-center gap-2 text-on-primary shadow-[0_0_15px_rgba(199,153,255,0.2)]">
-                                    <span className="material-symbols-outlined text-sm">settings</span>
-                                    <span className="font-mono text-xs font-bold tracking-widest uppercase">EDIT_PROFILE</span>
+                                <button onClick={handleEdit} disabled={isEditing} className="bg-primary hover:bg-primary-container transition-colors px-6 py-2 flex items-center gap-2 text-on-primary shadow-[0_0_15px_rgba(199,153,255,0.2)] disabled:opacity-50">
+                                    <span className="material-symbols-outlined text-sm">{isEditing ? 'sync' : 'settings'}</span>
+                                    <span className="font-mono text-xs font-bold tracking-widest uppercase">{isEditing ? 'SAVING...' : 'EDIT_PROFILE'}</span>
                                 </button>
                             </div>
                         </header>

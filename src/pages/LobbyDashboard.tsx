@@ -63,11 +63,10 @@ export default function LobbyDashboard() {
   };
 
   return (
-<div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
-
+<div className="h-screen flex flex-col bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
 
 <AppNavbar />
-<div className="flex pt-16 min-h-screen">
+<div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden">
 
 <AppSidebar />
 
