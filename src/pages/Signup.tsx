@@ -12,7 +12,6 @@ const Signup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Same particle background as Login
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -185,23 +184,14 @@ const Signup: React.FC = () => {
         }
       `}</style>
 
-      {/* Animated canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} />
-
-      {/* Grid bg */}
       <div className="absolute inset-0 obsidian-grid opacity-40" style={{ zIndex: 0 }} />
-
-      {/* Gradient orbs */}
       <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full pulse-glow" style={{ background: 'radial-gradient(circle, rgba(79,122,255,0.12) 0%, transparent 70%)', zIndex: 0 }} />
       <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full pulse-glow" style={{ background: 'radial-gradient(circle, rgba(173,198,255,0.08) 0%, transparent 70%)', zIndex: 0, animationDelay: '1.5s' }} />
 
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-8 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div
-          className="flex items-center gap-2 cursor-pointer"
-          onClick={() => navigate('/')}
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           <span className="material-symbols-outlined" style={{ color: '#adc6ff', fontSize: '22px' }}>terminal</span>
           <span style={{ color: '#adc6ff', fontWeight: 700, fontSize: '18px', letterSpacing: '-0.02em' }}>DEVDUEL</span>
         </div>
@@ -214,7 +204,6 @@ const Signup: React.FC = () => {
       <div className="flex-1 flex items-center justify-center px-4 py-10 relative z-10">
         <div className="w-full max-w-[520px]">
 
-          {/* Badge */}
           <div className="fade-in-up flex justify-center mb-8">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(173,198,255,0.06)', border: '1px solid rgba(173,198,255,0.12)' }}>
               <span className="w-2 h-2 rounded-full" style={{ background: '#4ade80', boxShadow: '0 0 6px rgba(74,222,128,0.7)' }} />
@@ -222,7 +211,6 @@ const Signup: React.FC = () => {
             </div>
           </div>
 
-          {/* Title */}
           <div className="fade-in-up text-center mb-8">
             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: '40px', lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: '10px' }}>
               Create your{' '}
@@ -233,11 +221,9 @@ const Signup: React.FC = () => {
             </p>
           </div>
 
-          {/* Card */}
           <div className="card-glass fade-in-up-delay p-8">
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
-              {/* Codename */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label className="form-label">Choose your codename</label>
                 <input
@@ -251,7 +237,6 @@ const Signup: React.FC = () => {
                 />
               </div>
 
-              {/* Email */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label className="form-label">Signal Address</label>
                 <input
@@ -264,7 +249,6 @@ const Signup: React.FC = () => {
                 />
               </div>
 
-              {/* Password row */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <label className="form-label">Create Access Key</label>
@@ -290,7 +274,6 @@ const Signup: React.FC = () => {
                 </div>
               </div>
 
-              {/* Strength indicator */}
               {password && (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -303,7 +286,6 @@ const Signup: React.FC = () => {
                 </div>
               )}
 
-              {/* Language Preference */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label className="form-label">Language Preference</label>
                 <select
@@ -316,7 +298,6 @@ const Signup: React.FC = () => {
                 </select>
               </div>
 
-              {/* Submit */}
               <button
                 type="submit"
                 className="signup-btn-primary"
@@ -337,7 +318,6 @@ const Signup: React.FC = () => {
                 )}
               </button>
 
-              {/* GitHub + back to login */}
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="button" className="signup-btn-secondary" style={{ flex: 1 }} id="signup-github">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
@@ -357,7 +337,6 @@ const Signup: React.FC = () => {
               </div>
             </form>
 
-            {/* Divider + existing user */}
             <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               <span style={{ color: 'rgba(241,243,252,0.4)', fontSize: '13px' }}>Already enlisted? </span>
               <button
@@ -369,7 +348,6 @@ const Signup: React.FC = () => {
             </div>
           </div>
 
-          {/* Security badge */}
           <div className="fade-in-up mt-4 flex justify-center">
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(10,14,20,0.5)' }}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -383,7 +361,6 @@ const Signup: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <div className="relative z-10" style={{ borderTop: '1px solid rgba(255,255,255,0.04)', padding: '14px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: 'rgba(241,243,252,0.18)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
           © 2024 DevDuel · v2.6.1 · All Data Encrypted
