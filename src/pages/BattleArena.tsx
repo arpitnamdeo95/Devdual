@@ -38,7 +38,6 @@ export default function BattleArena() {
   const [copied, setCopied] = useState(false);
   const [opponentLines, setOpponentLines] = useState(0);
   const [isZenMode, setIsZenMode] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
 
   useEffect(() => {
     socket.emit('join-room', { roomId, isSpectator: false });
@@ -125,10 +124,11 @@ export default function BattleArena() {
   const timerPercent = (timer / (30 * 60)) * 100;
 
   return (
-<div className="h-screen flex flex-col bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+
 
 <AppNavbar />
-<div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden">
+<div className="flex flex-1 overflow-hidden">
 
 <AppSidebar />
 
@@ -236,14 +236,14 @@ export default function BattleArena() {
 </div>
 
 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 p-1.5 glass-panel rounded-xl border border-white/10 shadow-2xl">
-<button onClick={() => { setIsTesting(true); setTimeout(() => setIsTesting(false), 2000); }} disabled={isTesting || status === 'SUBMITTING'} className="flex items-center gap-2 px-4 py-2 bg-surface-container-highest text-on-surface font-label font-bold text-xs rounded-lg hover:bg-surface-bright transition-all disabled:opacity-50">
+<button className="flex items-center gap-2 px-4 py-2 bg-surface-container-highest text-on-surface font-label font-bold text-xs rounded-lg hover:bg-surface-bright transition-all">
 <span className="material-symbols-outlined text-[18px]" data-icon="play_arrow">play_arrow</span>
-                            {isTesting ? 'Running...' : 'Run Tests'}
+                            Run Tests
                         </button>
 <div className="w-px h-6 bg-white/10 mx-1"></div>
-<button onClick={handleSubmit} disabled={isTesting || status === 'SUBMITTING'} className="flex items-center gap-2 px-6 py-2 bg-gradient-to-b from-primary to-primary-container text-on-primary font-label font-bold text-xs rounded-lg hover:brightness-110 transition-all disabled:opacity-50">
+<button className="flex items-center gap-2 px-6 py-2 bg-gradient-to-b from-primary to-primary-container text-on-primary font-label font-bold text-xs rounded-lg hover:brightness-110 transition-all">
 <span className="material-symbols-outlined text-[18px]" data-icon="publish">publish</span>
-                            {status === 'SUBMITTING' ? 'Submitting...' : 'Submit Solution'}
+                            Submit Solution
                         </button>
 </div>
 </section>
@@ -263,18 +263,10 @@ export default function BattleArena() {
 </div>
 </div>
 <div className="flex-1 overflow-y-auto p-4 font-mono text-[11px] text-zinc-400 space-y-1">
-{isTesting ? (
-    <p className="animate-pulse"><span className="text-primary">[RUNNING]</span> Executing test cases locally...</p>
-) : status === 'SUBMITTING' ? (
-    <p className="animate-pulse"><span className="text-secondary">[UPLOADING]</span> Submitting solution payload to centralized grader...</p>
-) : (
-    <>
-        <p><span className="text-tertiary">[PASS]</span> Test Case 1: Base Centroid Allocation</p>
-        <p><span className="text-tertiary">[PASS]</span> Test Case 2: Convergence Stability</p>
-        <p><span className="text-tertiary">[PASS]</span> Test Case 3: Performance Benchmark (0.84s)</p>
-        <p><span className="text-tertiary">[PASS]</span> Test Case 4: Edge Case - Null Dimensionality...</p>
-    </>
-)}
+<p><span className="text-tertiary">[PASS]</span> Test Case 1: Base Centroid Allocation</p>
+<p><span className="text-tertiary">[PASS]</span> Test Case 2: Convergence Stability</p>
+<p><span className="text-tertiary">[PASS]</span> Test Case 3: Performance Benchmark (0.84s)</p>
+<p className="animate-pulse"><span className="text-primary">[RUNNING]</span> Test Case 4: Edge Case - Null Dimensionality...</p>
 </div>
 </footer>
 </main>
