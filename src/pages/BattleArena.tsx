@@ -58,6 +58,33 @@ export default function BattleArena() {
   const [testcaseDisabled, setTestcaseDisabled] = useState(false);
   const [activePowerupAnim, setActivePowerupAnim] = useState<{type: string, byMe: boolean, userName?: string} | null>(null);
 
+  /* ── AI Coach Review ───────────────────────────────────────── */
+  const [coachSummary, setCoachSummary] = useState<string | null>(null);
+  const [isCoachLoading, setIsCoachLoading] = useState(false);
+
+  const fetchAIReview = async (finalCode: string, pTitle: string) => {
+    setIsCoachLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000'}/api/ai-review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: finalCode,
+          language,
+          problemTitle: pTitle,
+        }),
+      });
+      const data = await res.json();
+      if (data && !data.error) {
+        setCoachSummary(data.summary);
+      }
+    } catch (e) {
+      console.error('AI Coach fail:', e);
+    }
+    setIsCoachLoading(false);
+  };
+
+
   /* ── emotes / taunts ──────────────────────────────────────── */
   const [activeTaunt, setActiveTaunt] = useState<{emoji: string, byMe: boolean} | null>(null);
   const EMOTES = ['😤', '😂', '🔥', '😈', '💀'];
@@ -116,7 +143,6 @@ export default function BattleArena() {
       }));
       setPhase('ended');
 
-<<<<<<< HEAD
       /* ── update streak in state + localStorage ── */
       if (won) {
         setWinStreak(prev => {
@@ -134,9 +160,10 @@ export default function BattleArena() {
       } else {
         setWinStreak(0);
         localStorage.setItem('devdual_win_streak', '0');
-=======
-      if (won && data.winnerIdentity && data.loserIdentity) {
-         conn.reducers.endMatch({ 
+      }
+
+      if (data.winnerIdentity && data.loserIdentity) {
+         (conn as any).reducers.endMatch({ 
            matchId: actualRoomId.current, 
            codeUpdates: JSON.stringify({ winningCode: data.winningCode, loserCode: data.loserCode }),
            winnerId: data.winnerIdentity, 
@@ -145,12 +172,16 @@ export default function BattleArena() {
 
          setTimeout(() => {
            if (timer >= 28 * 60) {
-              conn.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'fast_solver' });
+              (conn as any).reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'fast_solver' });
            }
-           conn.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'first_win' });
+           if (won) {
+              (conn as any).reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'first_win' });
+           }
          }, 500);
->>>>>>> e62a841c6a04d56b4c804bf33d06a2dc6f0c8a25
       }
+      
+      /* ── Trigger AI Coach Analysis immediately ── */
+      fetchAIReview(data.winningCode || code, problem?.title || '');
     };
 
     const onPowerupActivated = (data: { type: string, userId: string, userName?: string }) => {
@@ -531,8 +562,48 @@ export default function BattleArena() {
               )}
             </div>
           )}
+          {/* ── AI COACH PREVIEW ── */}
+          <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 text-left relative overflow-hidden group">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl">🤖</span>
+              <span className="text-xs font-mono font-bold tracking-[0.2em] text-primary uppercase">AI Coach Insights</span>
+              {isCoachLoading && (
+                <div className="flex gap-1 ml-auto">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+              )}
+            </div>
+            
+            {isCoachLoading ? (
+              <p className="text-[11px] font-mono text-on-surface-variant animate-pulse lowercase italic">
+                {'>'} Analyzing code patterns and complexity...
+              </p>
+            ) : coachSummary ? (
+              <div className="space-y-2 animate-in fade-in slide-in-from-bottom-1 duration-500">
+                <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-3">
+                  {coachSummary}
+                </p>
+                <div className="h-[1px] bg-white/5 w-full"></div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-mono text-primary/60 uppercase">Click "AI Coach Review" for full breakdown</span>
+                  <span className="material-symbols-outlined text-sm text-primary animate-pulse">auto_awesome</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-[11px] font-mono text-on-surface-variant opacity-50 lowercase italic">
+                {'>'} Waiting for analysis to start...
+              </p>
+            )}
+            
+            {/* Gloss effect */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+          </div>
         </div>
+
         <div className="flex gap-3">
+
           <button
             onClick={() => navigate('/app')}
             className="flex-1 py-3 bg-primary text-on-primary rounded-xl font-bold hover:brightness-110 transition-all"
