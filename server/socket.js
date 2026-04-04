@@ -80,6 +80,12 @@ module.exports = function setupSockets(io) {
           problem:        null,
         };
 
+        // Make both sockets actually join the room so they receive `io.to(roomId)` broadcasts
+        const socket1 = io.sockets.sockets.get(p1.id);
+        const socket2 = io.sockets.sockets.get(p2.id);
+        if (socket1) socket1.join(roomId);
+        if (socket2) socket2.join(roomId);
+
         // Send match info WITHOUT a problem — question selection comes next
         io.to(p1.id).emit('match-found', { roomId, opponent: p2 });
         io.to(p2.id).emit('match-found', { roomId, opponent: p1 });
