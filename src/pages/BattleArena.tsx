@@ -38,12 +38,27 @@ export default function BattleArena() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const myName = useRef(`Player_${Math.floor(Math.random() * 9000) + 1000}`);
 
+  /* ── streak counter (localStorage) ────────────────────────── */
+  const [winStreak, setWinStreak]       = useState<number>(() => {
+    const saved = localStorage.getItem('devdual_win_streak');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+  const [bestStreak, setBestStreak]     = useState<number>(() => {
+    const saved = localStorage.getItem('devdual_best_streak');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+  const [streakAnim, setStreakAnim]     = useState(false); // flare animation on new win
+
   /* ── powerups ─────────────────────────────────────────────── */
   const [hasFreeze, setHasFreeze] = useState(true);
   const [hasTestcaseDisable, setHasTestcaseDisable] = useState(true);
   const [isFrozen, setIsFrozen] = useState(false);
   const [testcaseDisabled, setTestcaseDisabled] = useState(false);
   const [activePowerupAnim, setActivePowerupAnim] = useState<{type: string, byMe: boolean, userName?: string} | null>(null);
+
+  /* ── emotes / taunts ──────────────────────────────────────── */
+  const [activeTaunt, setActiveTaunt] = useState<{emoji: string, byMe: boolean} | null>(null);
+  const EMOTES = ['😤', '😂', '🔥', '😈', '💀'];
 
   /* ── is this a direct demo URL? ─────────────────────────── */
   const isDemoRoom = urlRoomId === 'demo';
@@ -93,10 +108,37 @@ export default function BattleArena() {
       const won = data.winnerId === socket.id;
       setGameResult({ won, message: won ? '🏆 YOU WIN!' : '💀 YOU LOST' });
       setPhase('ended');
+
+      /* ── update streak in state + localStorage ── */
+      if (won) {
+        setWinStreak(prev => {
+          const next = prev + 1;
+          localStorage.setItem('devdual_win_streak', String(next));
+          setBestStreak(best => {
+            const newBest = Math.max(best, next);
+            localStorage.setItem('devdual_best_streak', String(newBest));
+            return newBest;
+          });
+          setStreakAnim(true);
+          setTimeout(() => setStreakAnim(false), 1500);
+          return next;
+        });
+      } else {
+        setWinStreak(0);
+        localStorage.setItem('devdual_win_streak', '0');
+      }
     };
 
     const onPowerupActivated = (data: { type: string, userId: string, userName?: string }) => {
       const { type, userName } = data;
+
+      if (type.startsWith('taunt-')) {
+        const emoji = type.split('-')[1];
+        setActiveTaunt({ emoji, byMe: false });
+        setTimeout(() => setActiveTaunt(null), 2500);
+        return;
+      }
+
       setActivePowerupAnim({ type, byMe: false, userName });
       setTimeout(() => setActivePowerupAnim(null), 3000);
 
@@ -175,6 +217,13 @@ export default function BattleArena() {
     socket.emit('use-powerup', { roomId: actualRoomId.current, type });
     setActivePowerupAnim({ type, byMe: true, userName: myName.current });
     setTimeout(() => setActivePowerupAnim(null), 3000);
+  };
+
+  const handleTaunt = (emoji: string) => {
+    if (phase !== 'battle') return;
+    socket.emit('use-powerup', { roomId: actualRoomId.current, type: `taunt-${emoji}` });
+    setActiveTaunt({ emoji, byMe: true });
+    setTimeout(() => setActiveTaunt(null), 2500);
   };
 
   const handleRunTests = async () => {
@@ -400,6 +449,64 @@ export default function BattleArena() {
               <div className="text-2xl font-black text-primary">{Math.round(oppProgress)}%</div>
             </div>
           </div>
+
+          {/* ── POST-GAME STATS ── */}
+          <div className="grid grid-cols-4 gap-2 mt-2">
+            <div className="bg-surface border border-white/5 rounded-lg p-2 flex flex-col items-center text-center">
+              <div className="text-[9px] font-mono text-on-surface-variant uppercase whitespace-nowrap">Time Taken</div>
+              <div className="text-sm font-bold text-on-surface">{fmt(30 * 60 - timer)}</div>
+            </div>
+            <div className="bg-surface border border-white/5 rounded-lg p-2 flex flex-col items-center">
+              <div className="text-[9px] font-mono text-on-surface-variant uppercase">Lines</div>
+              <div className="text-sm font-bold text-on-surface">{code.split('\n').length}</div>
+            </div>
+            <div className="bg-surface border border-white/5 rounded-lg p-2 flex flex-col items-center">
+              <div className="text-[9px] font-mono text-on-surface-variant uppercase">Tests</div>
+              <div className="text-sm font-bold text-on-surface">
+                {Math.round((myProgress / 100) * (problem?.testCases?.length || 0))}
+              </div>
+            </div>
+            <div className="bg-surface border border-white/5 rounded-lg p-2 flex flex-col items-center">
+              <div className="text-[9px] font-mono text-on-surface-variant uppercase">Powerups</div>
+              <div className="text-sm font-bold text-on-surface">
+                {(hasFreeze ? 0 : 1) + (hasTestcaseDisable ? 0 : 1)}
+              </div>
+            </div>
+          </div>
+
+          {/* ── STREAK PANEL ── */}
+          {gameResult?.won ? (
+            <div className="mt-3 flex flex-col items-center gap-1 px-5 py-3 rounded-xl bg-orange-500/10 border border-orange-500/30 w-full">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl animate-bounce">🔥</span>
+                <span className="text-3xl font-black text-orange-400 tabular-nums">{winStreak}</span>
+                <span className="text-sm font-bold text-orange-300">WIN STREAK</span>
+              </div>
+              {winStreak >= bestStreak && bestStreak > 1 && (
+                <span className="text-[10px] font-mono text-orange-400/80 uppercase tracking-widest animate-pulse">
+                  🏅 New Personal Best!
+                </span>
+              )}
+              {winStreak < bestStreak && (
+                <span className="text-[10px] font-mono text-on-surface-variant/60 uppercase tracking-widest">
+                  Best: {bestStreak}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="mt-3 flex flex-col items-center gap-1 px-5 py-3 rounded-xl bg-surface-container w-full border border-white/5">
+              <span className="text-[11px] font-mono text-on-surface-variant/60 uppercase tracking-widest">Streak Reset</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xl opacity-30">🔥</span>
+                <span className="text-xl font-black text-on-surface-variant/30 tabular-nums line-through">0</span>
+              </div>
+              {bestStreak > 0 && (
+                <span className="text-[10px] font-mono text-on-surface-variant/40 uppercase tracking-widest">
+                  Your best was {bestStreak} 🏅
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex gap-3">
           <button
@@ -424,6 +531,11 @@ export default function BattleArena() {
   ══════════════════════════════════════════════════════════════ */
   return (
     <div className="h-screen flex flex-col bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+
+      {/* ── LOW TIMER PULSE EFFECT ── */}
+      {timer <= 300 && phase === 'battle' && (
+        <div className="fixed inset-0 z-[40] pointer-events-none mix-blend-overlay bg-red-500/10 animate-pulse transition-all duration-1000" />
+      )}
 
       {/* ── POWERUP OVERLAY ANIMATION ── */}
       {activePowerupAnim && (
@@ -478,6 +590,21 @@ export default function BattleArena() {
             </div>
 
             <div className="flex-1" />
+
+            {/* ── WIN STREAK BADGE ── */}
+            {winStreak > 0 && (
+              <div
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full border shrink-0 transition-all duration-300 ${
+                  streakAnim
+                    ? 'bg-orange-500/30 border-orange-400/60 scale-110 shadow-[0_0_20px_rgba(251,146,60,0.5)]'
+                    : 'bg-orange-500/10 border-orange-500/25'
+                }`}
+              >
+                <span className={`text-base leading-none ${streakAnim ? 'animate-bounce' : ''}`}>🔥</span>
+                <span className="font-black text-orange-400 text-sm tabular-nums">{winStreak}</span>
+                <span className="text-[9px] font-mono text-orange-400/70 uppercase tracking-widest hidden sm:block">streak</span>
+              </div>
+            )}
 
             {/* Timer */}
             <div className={`font-mono font-black text-xl ${timerColor} shrink-0`}>
@@ -566,6 +693,20 @@ export default function BattleArena() {
                 </div>
                 <span className="material-symbols-outlined text-[20px]">visibility_off</span>
               </button>
+
+              {/* ── EMOTES ── */}
+              <div className="w-8 h-px bg-white/10 my-2 shrink-0" />
+              {EMOTES.map(emoji => (
+                <button
+                  key={emoji}
+                  onClick={() => handleTaunt(emoji)}
+                  disabled={phase !== 'battle'}
+                  className="w-10 h-10 rounded-full bg-surface hover:bg-surface-bright flex items-center justify-center text-lg transition-transform hover:scale-125 disabled:opacity-40 border border-white/5 shrink-0"
+                  title="Taunt Opponent"
+                >
+                  {emoji}
+                </button>
+              ))}
             </div>
 
             {/* ── PROBLEM PANEL ── */}
@@ -759,6 +900,14 @@ export default function BattleArena() {
               </div>
 
               <div className="flex-1 relative bg-[#0d0d12]">
+                {/* ── TAUNT OVERLAY ── */}
+                {activeTaunt && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none overflow-hidden bg-black/40 backdrop-blur-[2px] transition-all">
+                    <div className="text-[120px] animate-bounce drop-shadow-[0_0_50px_rgba(255,255,255,0.6)]">
+                      {activeTaunt.emoji}
+                    </div>
+                  </div>
+                )}
                 <Editor
                   height="100%"
                   defaultLanguage="python"
