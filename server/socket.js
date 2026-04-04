@@ -208,11 +208,15 @@ module.exports = function setupSockets(io) {
 
       // Identify the opponent
       const [p1, p2] = room.players || [];
-      const opponentId = (p1?.id === socket.id) ? p2?.id : p1?.id;
+      const winner = p1?.id === socket.id ? p1 : p2;
+      const loser = p1?.id === socket.id ? p2 : p1;
+      const opponentId = loser?.id;
       const loserCode = opponentId ? (room.code[opponentId] || '# No code submitted') : '';
 
       io.to(roomId).emit('game-end', {
         winnerId:    socket.id,
+        winnerIdentity: winner?.identity,
+        loserIdentity: loser?.identity,
         winningCode: code,
         loserCode:   loserCode,
         problemDescription: room.problem?.description || ''

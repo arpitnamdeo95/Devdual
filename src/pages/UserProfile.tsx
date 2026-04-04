@@ -1,9 +1,20 @@
 import React from 'react';
 import { AppNavbar, AppSidebar } from '../components/AppLayout';
+import { useSpacetimeData } from '../spacetimeProvider';
 
 export default function UserProfile() {
     const [isExporting, setIsExporting] = React.useState(false);
     const [isEditing, setIsEditing] = React.useState(false);
+
+    const localIdentity = localStorage.getItem('devduel_user_identity') || '';
+    const myUser = useSpacetimeData(db => Array.from(db.user.iter()).find(u => u.identity === localIdentity));
+    const myLeaderboard = useSpacetimeData(db => Array.from(db.leaderboardEntry.iter()).find(l => l.userIdentity === localIdentity));
+    const allLeaderboard = useSpacetimeData(db => Array.from(db.leaderboardEntry.iter()).sort((a,b) => b.elo - a.elo));
+    
+    const myRank = allLeaderboard.findIndex(l => l.userIdentity === localIdentity) + 1;
+    const totalPlayers = allLeaderboard.length;
+    const winRate = myUser?.matchesPlayed ? Math.round((myUser.wins / myUser.matchesPlayed) * 100) : 0;
+    const topPercent = totalPlayers ? Math.round((myRank / totalPlayers) * 100) : 100;
 
     const handleExport = () => {
         setIsExporting(true);
@@ -30,8 +41,8 @@ export default function UserProfile() {
                     <div className="max-w-7xl mx-auto space-y-8">
                         <header className="flex justify-between items-end">
                             <div>
-                                <h1 className="text-3xl font-extrabold tracking-tighter text-on-surface uppercase">OPERATOR PROFILE</h1>
-                                <p className="text-on-surface-variant font-mono text-sm mt-1">/ SYSTEM_ID: B-742</p>
+                                <h1 className="text-3xl font-extrabold tracking-tighter text-on-surface uppercase">{myUser?.username || "OPERATOR PROFILE"}</h1>
+                                <p className="text-on-surface-variant font-mono text-sm mt-1">/ SYSTEM_ID: {localIdentity.substring(0,10)}...</p>
                             </div>
                             <div className="flex gap-3">
                                 <button onClick={handleExport} disabled={isExporting} className="bg-surface-container hover:bg-surface-container-high transition-colors px-4 py-2 flex items-center gap-2 border border-outline-variant/30 text-on-surface disabled:opacity-50">
@@ -50,22 +61,22 @@ export default function UserProfile() {
                             <div className="bg-surface-container border border-outline-variant/10 p-6 flex flex-col justify-between">
                                 <div className="text-on-surface-variant font-mono text-xs uppercase tracking-widest mb-4">Current Rating</div>
                                 <div className="flex items-end gap-3">
-                                    <span className="text-4xl font-headline font-black text-secondary">2,842</span>
-                                    <span className="text-secondary text-sm font-bold mb-1">+142 pts</span>
+                                    <span className="text-4xl font-headline font-black text-secondary">{myLeaderboard?.elo || 1000}</span>
                                 </div>
                             </div>
                             <div className="bg-surface-container border border-outline-variant/10 p-6 flex flex-col justify-between">
                                 <div className="text-on-surface-variant font-mono text-xs uppercase tracking-widest mb-4">Win Rate</div>
                                 <div className="flex items-end gap-3">
-                                    <span className="text-4xl font-headline font-black text-on-surface">68.4%</span>
+                                    <span className="text-4xl font-headline font-black text-on-surface">{winRate}%</span>
+                                    <span className="text-on-surface-variant text-sm mb-1">{myUser?.wins || 0}W / {myUser?.matchesPlayed ? myUser.matchesPlayed - myUser.wins : 0}L</span>
                                 </div>
                             </div>
                             <div className="bg-surface-container border border-outline-variant/10 p-6 flex flex-col justify-between md:col-span-2 relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none"></div>
                                 <div className="text-primary font-mono text-xs uppercase tracking-widest mb-4 relative z-10">Global Rank</div>
                                 <div className="flex items-end gap-4 relative z-10">
-                                    <span className="text-4xl font-headline font-black text-primary">#1,042</span>
-                                    <span className="text-on-surface-variant text-sm mb-1">Top 2.1% Worldwide</span>
+                                    <span className="text-4xl font-headline font-black text-primary">#{myRank || '-'}</span>
+                                    {totalPlayers > 0 && <span className="text-on-surface-variant text-sm mb-1">Top {topPercent}% Worldwide</span>}
                                 </div>
                                 <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-8xl text-primary/5 group-hover:text-primary/10 transition-colors">public</span>
                             </div>
