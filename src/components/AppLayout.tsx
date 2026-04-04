@@ -12,6 +12,7 @@ export function AppNavbar() {
 <Link className={`font-['Inter'] font-medium text-sm tracking-tight ${path.includes('/arena') ? 'text-[#adc6ff] border-b-2 border-[#adc6ff] pb-1' : 'text-zinc-400 hover:text-white transition-colors duration-200'}`} to="/arena/demo">Arena</Link>
 <Link className={`font-['Inter'] font-medium text-sm tracking-tight ${path.includes('/watch') ? 'text-[#adc6ff] border-b-2 border-[#adc6ff] pb-1' : 'text-zinc-400 hover:text-white transition-colors duration-200'}`} to="/watch/demo">Rankings</Link>
 <Link className={`font-['Inter'] font-medium text-sm tracking-tight ${path.includes('/profile') ? 'text-[#adc6ff] border-b-2 border-[#adc6ff] pb-1' : 'text-zinc-400 hover:text-white transition-colors duration-200'}`} to="/profile">Profile</Link>
+<Link className={`font-['Inter'] font-medium text-sm tracking-tight ${path.includes('/marketplace') ? 'text-[#adc6ff] border-b-2 border-[#adc6ff] pb-1' : 'text-zinc-400 hover:text-white transition-colors duration-200'}`} to="/marketplace">Marketplace</Link>
 </nav>
 </div>
 <div className="flex items-center gap-4">
@@ -53,6 +54,10 @@ export function AppSidebar() {
 <button onClick={() => navigate('/docs')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 group ${path.includes('/docs') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
 <span className="material-symbols-outlined">description</span>
 <span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90">Docs</span>
+</button>
+<button onClick={() => navigate('/marketplace')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 group ${path.includes('/marketplace') ? 'bg-blue-500/10 border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
+<span className={`material-symbols-outlined ${path.includes('/marketplace') ? 'text-[#eac124]' : ''}`}>store</span>
+<span className={`font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90 ${path.includes('/marketplace') ? 'text-[#eac124]' : ''}`}>Shop</span>
 </button>
 </div>
 </aside>
