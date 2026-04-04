@@ -338,7 +338,7 @@ export default function SpectatorView() {
 <div className="px-6 py-4 bg-surface-container-highest/20 flex items-center justify-between border-t border-white/[0.03]">
 <span className="text-xs text-zinc-500 font-mono">SHOWING 1-15 OF 1,284 ARCHITECTS</span>
 <div className="flex items-center gap-2">
-<button className="p-1 hover:text-primary transition-colors disabled:opacity-30" disabled="">
+<button className="p-1 hover:text-primary transition-colors disabled:opacity-30" disabled>
 <span className="material-symbols-outlined">chevron_left</span>
 </button>
 <div className="flex gap-1">
