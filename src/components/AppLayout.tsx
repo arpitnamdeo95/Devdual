@@ -5,7 +5,7 @@ export function AppNavbar() {
   const path = location.pathname;
   
   return (
-<header className="bg-[#131313] dark:bg-[#131313] border-b border-white/5 flex justify-between items-center w-full px-6 h-16 fixed top-0 z-50">
+<header className="bg-[#131313]/80 backdrop-blur-md border-b border-white/5 flex justify-between items-center w-full px-6 h-16 fixed top-0 z-50">
 <div className="flex items-center gap-8">
 <span className="font-['JetBrains_Mono'] font-bold text-lg tracking-tighter text-[#adc6ff]"><Link to="/">DEVDUEL</Link></span>
 <nav className="hidden md:flex gap-6 items-center">
@@ -34,7 +34,7 @@ export function AppSidebar() {
   const path = location.pathname;
 
   return (
-<aside className="bg-[#1c1b1b] dark:bg-[#1c1b1b] h-[calc(100vh-4rem)] w-20 flex flex-col items-center py-8 gap-6 sticky top-16 shrink-0 z-40">
+<aside className="bg-[#1c1b1b]/60 backdrop-blur-md h-[calc(100vh-4rem)] w-20 flex flex-col items-center py-8 gap-6 sticky top-16 shrink-0 z-40 border-r border-white/5">
 <div className="flex flex-col items-center gap-1 mb-4">
 <span className="text-[#adc6ff] font-black text-xs font-mono">B-742</span>
 </div>
