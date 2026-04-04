@@ -65,10 +65,8 @@ export default function BattleArena() {
 
     const onFinalQuestion = (data: any) => {
       // Called by QuestionSelector once server resolves the choice
-      setProblem(data);
-      setCode(data?.starterCode || 'def solve():\n    pass\n');
-      setPhase('battle');
-      setTimer(30 * 60);
+      setProblem(data.problem);
+      if (code === '') setCode(data.problem?.starterCode || 'def solve():\n    pass\n');
     };
 
     const onRoomState = (state: any) => {
@@ -190,6 +188,11 @@ export default function BattleArena() {
         body:    JSON.stringify({ code, language, testCases: problem.testCases }),
       });
       const data = await res.json();
+      if (!res.ok || data.error) {
+        setTestResults([{ passed: false, actual: data.error || 'Server error', expected: '', input: '', stderr: 'Execution server failed to run your code.' }]);
+        setIsTesting(false);
+        return;
+      }
       const results: any[] = data.results || [];
       setTestResults(results);
       const passed   = results.filter(r => r.passed).length;
@@ -212,6 +215,11 @@ export default function BattleArena() {
         body:    JSON.stringify({ code, language, testCases: problem.testCases }),
       });
       const data = await res.json();
+      if (!res.ok || data.error) {
+        setTestResults([{ passed: false, actual: data.error || 'Server error', expected: '', input: '', stderr: 'Execution server failed to run your code.' }]);
+        setIsSubmitting(false);
+        return;
+      }
       const results: any[] = data.results || [];
       setTestResults(results);
       const passed   = results.filter(r => r.passed).length;
@@ -419,12 +427,29 @@ export default function BattleArena() {
 
       {/* ── POWERUP OVERLAY ANIMATION ── */}
       {activePowerupAnim && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/40 backdrop-blur-sm transition-all">
-           <div className={`text-6xl md:text-9xl font-black italic tracking-tighter uppercase text-center animate-bounce drop-shadow-[0_0_40px_rgba(255,255,255,0.8)] ${activePowerupAnim.type === 'freeze' ? 'text-blue-400' : 'text-purple-400'}`}>
-              <div className="text-3xl md:text-5xl mb-4 text-white">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/50 backdrop-blur-md transition-all duration-300">
+           {/* Epic 3D floating and scaling effect */}
+           <div className={`
+             flex flex-col items-center justify-center
+             transform scale-150 animate-powerup-epic
+             drop-shadow-[0_0_80px_rgba(255,255,255,0.4)]
+             ${activePowerupAnim.type === 'freeze' ? 'text-blue-300' : 'text-purple-400'}
+           `}>
+              <div className="text-2xl md:text-3xl font-black mb-2 tracking-[0.2em] text-white opacity-90 slide-down-fade">
                 {activePowerupAnim.byMe ? "YOU CAST" : `${activePowerupAnim.userName || "OPPONENT"} CAST`}
               </div>
-              {activePowerupAnim.type === 'freeze' ? '❄️ FREEZE ❄️' : '👁️ BLIND 👁️'}
+              <div className={`
+                text-7xl md:text-9xl font-black italic tracking-tighter uppercase
+                border-[10px] rounded-3xl px-12 py-6
+                shadow-[inset_0_0_50px_currentColor] 
+                ${activePowerupAnim.type === 'freeze' ? 'border-blue-400 bg-blue-900/30 text-blue-200' : 'border-purple-500 bg-purple-900/30 text-purple-200'}
+                scale-up-elastic
+              `}>
+                {activePowerupAnim.type === 'freeze' ? '❄️ FREEZE ❄️' : '👁️ BLIND 👁️'}
+              </div>
+              <div className="mt-6 text-xl md:text-2xl text-white font-mono opacity-80 slide-up-fade">
+                {activePowerupAnim.type === 'freeze' ? 'Opponent code editor locked (10s)' : 'Opponent test cases hidden (30s)'}
+              </div>
            </div>
         </div>
       )}
