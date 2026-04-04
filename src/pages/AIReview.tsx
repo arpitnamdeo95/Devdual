@@ -79,9 +79,8 @@ export default function AIReview() {
     const parsed = JSON.parse(stored);
     setMatchData(parsed);
 
-    const BACKEND_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000';
-    
-    fetch(`${BACKEND_URL}/api/review`, {
+    // Vercel Serverless Function (Relative Path)
+    fetch('/api/review', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(parsed)
