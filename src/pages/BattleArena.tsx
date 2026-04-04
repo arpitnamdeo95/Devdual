@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { socket } from '../socket';
 import QuestionSelector from '../components/QuestionSelector';
+import { useSpacetime } from '../spacetimeProvider';
 
 /* ─────────────────────────────────────────────── helpers ─── */
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -12,6 +13,7 @@ const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${Str
 export default function BattleArena() {
   const { roomId: urlRoomId } = useParams<{ roomId: string }>();
   const navigate    = useNavigate();
+  const conn = useSpacetime();
 
   /* ── actualRoomId: comes from socket 'match-found' event, NOT the URL
      URL stays '/arena/matchmaking' the whole time; real roomId is from server */
@@ -107,8 +109,14 @@ export default function BattleArena() {
     const onGameEnd = (data: any) => {
       const won = data.winnerId === socket.id;
       setGameResult({ won, message: won ? '🏆 YOU WIN!' : '💀 YOU LOST' });
+      sessionStorage.setItem('reviewData', JSON.stringify({
+        winnerCode: data.winningCode,
+        loserCode: data.loserCode,
+        problemDescription: data.problemDescription || ''
+      }));
       setPhase('ended');
 
+<<<<<<< HEAD
       /* ── update streak in state + localStorage ── */
       if (won) {
         setWinStreak(prev => {
@@ -126,6 +134,22 @@ export default function BattleArena() {
       } else {
         setWinStreak(0);
         localStorage.setItem('devdual_win_streak', '0');
+=======
+      if (won && data.winnerIdentity && data.loserIdentity) {
+         conn.reducers.endMatch({ 
+           matchId: actualRoomId.current, 
+           codeUpdates: JSON.stringify({ winningCode: data.winningCode, loserCode: data.loserCode }),
+           winnerId: data.winnerIdentity, 
+           loserId: data.loserIdentity 
+         });
+
+         setTimeout(() => {
+           if (timer >= 28 * 60) {
+              conn.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'fast_solver' });
+           }
+           conn.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'first_win' });
+         }, 500);
+>>>>>>> e62a841c6a04d56b4c804bf33d06a2dc6f0c8a25
       }
     };
 
@@ -197,7 +221,7 @@ export default function BattleArena() {
   const handleFindMatch = () => {
     setPhase('searching');
     setSearchSec(0);
-    socket.emit('find-match', { name: myName.current, rating: 1500 });
+    socket.emit('find-match', { name: myName.current, identity: localStorage.getItem('devduel_user_identity'), rating: 1500 });
   };
 
   const handleCancelSearch = () => {

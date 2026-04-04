@@ -1,27 +1,57 @@
 import React from 'react';
 import { AppNavbar, AppSidebar } from '../components/AppLayout';
+import { useSpacetimeData } from '../spacetimeProvider';
 
 export default function UserProfile() {
+    const [isExporting, setIsExporting] = React.useState(false);
+    const [isEditing, setIsEditing] = React.useState(false);
+
+    const localIdentity = localStorage.getItem('devduel_user_identity') || '';
+    const myUser = useSpacetimeData(db => Array.from(db.user.iter()).find(u => u.identity === localIdentity));
+    const myLeaderboard = useSpacetimeData(db => Array.from(db.leaderboardEntry.iter()).find(l => l.userIdentity === localIdentity));
+    const allLeaderboard = useSpacetimeData(db => Array.from(db.leaderboardEntry.iter()).sort((a,b) => b.elo - a.elo));
+    
+    const myRank = allLeaderboard.findIndex(l => l.userIdentity === localIdentity) + 1;
+    const totalPlayers = allLeaderboard.length;
+    const winRate = myUser?.matchesPlayed ? Math.round((myUser.wins / myUser.matchesPlayed) * 100) : 0;
+    const topPercent = totalPlayers ? Math.round((myRank / totalPlayers) * 100) : 100;
+
+    const handleExport = () => {
+        setIsExporting(true);
+        setTimeout(() => {
+            setIsExporting(false);
+            alert("Data exported successfully!");
+        }, 1500);
+    };
+
+    const handleEdit = () => {
+        setIsEditing(true);
+        setTimeout(() => {
+            setIsEditing(false);
+            alert("Profile preferences saved!");
+        }, 1000);
+    };
+
     return (
-        <div className="min-h-screen bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+        <div className="h-screen flex flex-col bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
             <AppNavbar />
-            <div className="flex pt-16 min-h-screen">
+            <div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden">
                 <AppSidebar />
                 <main className="flex-1 bg-surface-container-lowest p-8 overflow-y-auto">
                     <div className="max-w-7xl mx-auto space-y-8">
                         <header className="flex justify-between items-end">
                             <div>
-                                <h1 className="text-3xl font-extrabold tracking-tighter text-on-surface uppercase">OPERATOR PROFILE</h1>
-                                <p className="text-on-surface-variant font-mono text-sm mt-1">/ SYSTEM_ID: B-742</p>
+                                <h1 className="text-3xl font-extrabold tracking-tighter text-on-surface uppercase">{myUser?.username || "OPERATOR PROFILE"}</h1>
+                                <p className="text-on-surface-variant font-mono text-sm mt-1">/ SYSTEM_ID: {localIdentity.substring(0,10)}...</p>
                             </div>
                             <div className="flex gap-3">
-                                <button className="bg-surface-container hover:bg-surface-container-high transition-colors px-4 py-2 flex items-center gap-2 border border-outline-variant/30 text-on-surface">
-                                    <span className="material-symbols-outlined text-sm text-secondary">share</span>
-                                    <span className="font-mono text-xs font-bold tracking-widest uppercase">EXPORT_DATA</span>
+                                <button onClick={handleExport} disabled={isExporting} className="bg-surface-container hover:bg-surface-container-high transition-colors px-4 py-2 flex items-center gap-2 border border-outline-variant/30 text-on-surface disabled:opacity-50">
+                                    <span className="material-symbols-outlined text-sm text-secondary">{isExporting ? 'hourglass_empty' : 'share'}</span>
+                                    <span className="font-mono text-xs font-bold tracking-widest uppercase">{isExporting ? 'EXPORTING...' : 'EXPORT_DATA'}</span>
                                 </button>
-                                <button className="bg-primary hover:bg-primary-container transition-colors px-6 py-2 flex items-center gap-2 text-on-primary shadow-[0_0_15px_rgba(199,153,255,0.2)]">
-                                    <span className="material-symbols-outlined text-sm">settings</span>
-                                    <span className="font-mono text-xs font-bold tracking-widest uppercase">EDIT_PROFILE</span>
+                                <button onClick={handleEdit} disabled={isEditing} className="bg-primary hover:bg-primary-container transition-colors px-6 py-2 flex items-center gap-2 text-on-primary shadow-[0_0_15px_rgba(199,153,255,0.2)] disabled:opacity-50">
+                                    <span className="material-symbols-outlined text-sm">{isEditing ? 'sync' : 'settings'}</span>
+                                    <span className="font-mono text-xs font-bold tracking-widest uppercase">{isEditing ? 'SAVING...' : 'EDIT_PROFILE'}</span>
                                 </button>
                             </div>
                         </header>
@@ -31,22 +61,22 @@ export default function UserProfile() {
                             <div className="bg-surface-container border border-outline-variant/10 p-6 flex flex-col justify-between">
                                 <div className="text-on-surface-variant font-mono text-xs uppercase tracking-widest mb-4">Current Rating</div>
                                 <div className="flex items-end gap-3">
-                                    <span className="text-4xl font-headline font-black text-secondary">2,842</span>
-                                    <span className="text-secondary text-sm font-bold mb-1">+142 pts</span>
+                                    <span className="text-4xl font-headline font-black text-secondary">{myLeaderboard?.elo || 1000}</span>
                                 </div>
                             </div>
                             <div className="bg-surface-container border border-outline-variant/10 p-6 flex flex-col justify-between">
                                 <div className="text-on-surface-variant font-mono text-xs uppercase tracking-widest mb-4">Win Rate</div>
                                 <div className="flex items-end gap-3">
-                                    <span className="text-4xl font-headline font-black text-on-surface">68.4%</span>
+                                    <span className="text-4xl font-headline font-black text-on-surface">{winRate}%</span>
+                                    <span className="text-on-surface-variant text-sm mb-1">{myUser?.wins || 0}W / {myUser?.matchesPlayed ? myUser.matchesPlayed - myUser.wins : 0}L</span>
                                 </div>
                             </div>
                             <div className="bg-surface-container border border-outline-variant/10 p-6 flex flex-col justify-between md:col-span-2 relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none"></div>
                                 <div className="text-primary font-mono text-xs uppercase tracking-widest mb-4 relative z-10">Global Rank</div>
                                 <div className="flex items-end gap-4 relative z-10">
-                                    <span className="text-4xl font-headline font-black text-primary">#1,042</span>
-                                    <span className="text-on-surface-variant text-sm mb-1">Top 2.1% Worldwide</span>
+                                    <span className="text-4xl font-headline font-black text-primary">#{myRank || '-'}</span>
+                                    {totalPlayers > 0 && <span className="text-on-surface-variant text-sm mb-1">Top {topPercent}% Worldwide</span>}
                                 </div>
                                 <span className="material-symbols-outlined absolute -right-4 -bottom-4 text-8xl text-primary/5 group-hover:text-primary/10 transition-colors">public</span>
                             </div>

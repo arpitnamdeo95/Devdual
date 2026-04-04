@@ -38,26 +38,30 @@ export function AppSidebar() {
 <div className="flex flex-col items-center gap-1 mb-4">
 <span className="text-[#adc6ff] font-black text-xs font-mono">B-742</span>
 </div>
-<div className="flex flex-col gap-6 items-center w-full">
-<button onClick={() => navigate('/arena/demo')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 group ${path.includes('/arena') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
+<div className="flex flex-col gap-4 items-center w-full overflow-y-auto code-editor-scrollbar pb-4">
+<button onClick={() => navigate('/dashboard')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 shrink-0 group ${path.includes('/dashboard') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
+<span className="material-symbols-outlined">dashboard</span>
+<span className="font-['Inter'] text-[9px] font-semibold uppercase tracking-widest">Dash</span>
+</button>
+<button onClick={() => navigate('/arena/demo')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 shrink-0 group ${path.includes('/arena') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
 <span className="material-symbols-outlined">code</span>
-<span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90">Code</span>
+<span className="font-['Inter'] text-[9px] font-semibold uppercase tracking-widest">Code</span>
 </button>
-<button onClick={() => navigate('/app')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 group ${path === '/app' ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
+<button onClick={() => navigate('/app')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 shrink-0 group ${path === '/app' ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
 <span className="material-symbols-outlined">terminal</span>
-<span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90">Results</span>
+<span className="font-['Inter'] text-[9px] font-semibold uppercase tracking-widest">Lobby</span>
 </button>
-<button onClick={() => navigate('/review/demo')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 group ${path.includes('/review') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
+<button onClick={() => navigate('/review/demo')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 shrink-0 group ${path.includes('/review') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
 <span className="material-symbols-outlined">analytics</span>
-<span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90">Analysis</span>
+<span className="font-['Inter'] text-[9px] font-semibold uppercase tracking-widest">Stats</span>
 </button>
-<button onClick={() => navigate('/docs')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 group ${path.includes('/docs') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
+<button onClick={() => navigate('/docs')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 shrink-0 group ${path.includes('/docs') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
 <span className="material-symbols-outlined">description</span>
-<span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90">Docs</span>
+<span className="font-['Inter'] text-[9px] font-semibold uppercase tracking-widest">Docs</span>
 </button>
-<button onClick={() => navigate('/marketplace')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 group ${path.includes('/marketplace') ? 'bg-blue-500/10 border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
+<button onClick={() => navigate('/marketplace')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 shrink-0 group ${path.includes('/marketplace') ? 'bg-blue-500/10 border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
 <span className={`material-symbols-outlined ${path.includes('/marketplace') ? 'text-[#eac124]' : ''}`}>store</span>
-<span className={`font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90 ${path.includes('/marketplace') ? 'text-[#eac124]' : ''}`}>Shop</span>
+<span className={`font-['Inter'] text-[9px] font-semibold uppercase tracking-widest ${path.includes('/marketplace') ? 'text-[#eac124]' : ''}`}>Shop</span>
 </button>
 </div>
 </aside>
