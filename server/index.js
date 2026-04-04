@@ -19,19 +19,15 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ['GET', 'POST'],
-    credentials: true,
-  }
+  cors: { origin: '*', methods: ['GET', 'POST'] }
 });
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors());
 app.use(express.json());
 
-// Health check — used by Render to confirm server is alive
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
-app.get('/', (req, res) => res.json({ service: 'DevDuel Backend', status: 'running' }));
+app.get('/', (req, res) => res.json({ service: 'DevDuel Backend', status: 'running', url: 'https://devduel-backend-m4b9.onrender.com' }));
+
 
 
 // Routes

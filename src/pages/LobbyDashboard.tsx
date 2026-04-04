@@ -144,10 +144,10 @@ export default function LobbyDashboard() {
 <div className="w-full h-64 relative">
 <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 200">
 <defs>
-<lineargradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
-<stop offset="0%" stop-color="#adc6ff" stop-opacity="0.3"></stop>
-<stop offset="100%" stop-color="#adc6ff" stop-opacity="0"></stop>
-</lineargradient>
+<linearGradient id="lineGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stopColor="#adc6ff" stopOpacity="0.3"></stop>
+<stop offset="100%" stopColor="#adc6ff" stopOpacity="0"></stop>
+</linearGradient>
 </defs>
 
 <line stroke="#424754" strokeDasharray="4" strokeWidth="0.5" x1="0" x2="1000" y1="50" y2="50"></line>
