@@ -51,6 +51,10 @@ export function AppSidebar() {
 <span className="material-symbols-outlined">analytics</span>
 <span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90">Analysis</span>
 </button>
+<button onClick={() => navigate('/arena/hypergraph')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 group ${path.includes('/hypergraph') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
+<span className="material-symbols-outlined">hub</span>
+<span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90">Arena</span>
+</button>
 <button onClick={() => navigate('/docs')} className={`w-12 h-12 flex flex-col items-center justify-center gap-1 ease-in-out transition-all duration-200 group ${path.includes('/docs') ? 'bg-blue-500/10 text-[#adc6ff] border-r-2 border-[#adc6ff]' : 'text-zinc-500 hover:bg-white/5 hover:text-zinc-300'}`}>
 <span className="material-symbols-outlined">description</span>
 <span className="font-['Inter'] text-[10px] font-semibold uppercase tracking-widest scale-90">Docs</span>

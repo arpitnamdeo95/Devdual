@@ -1,5 +1,5 @@
 import { AppNavbar, AppSidebar } from '../components/AppLayout';
-import { Superplane } from '../components/Superplane';
+import Superplane from '../components/Superplane';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 

@@ -8,6 +8,7 @@ import SpectatorView from './pages/SpectatorView';
 import AIReview from './pages/AIReview';
 import UserProfile from './pages/UserProfile';
 import Marketplace from './pages/Marketplace';
+import HypergraphArena from './pages/HypergraphArena';
 import { Documentation, PrivacyPolicy, TermsOfService, Resources } from './components/ContentPages';
 
 function App() {
@@ -24,10 +25,12 @@ function App() {
           <Route path="/app" element={<LobbyDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/arena/matchmaking" element={<BattleArena />} />
+          <Route path="/arena/hypergraph" element={<HypergraphArena />} />
           <Route path="/arena/:roomId" element={<BattleArena />} />
           <Route path="/watch/:roomId" element={<SpectatorView />} />
           <Route path="/review/:matchId" element={<AIReview />} />
           <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/hypergraph" element={<HypergraphArena />} />
 
           {/* Footer content — policy, docs, etc */}
           <Route path="/docs" element={<Documentation />} />
