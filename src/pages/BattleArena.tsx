@@ -26,7 +26,8 @@ export default function BattleArena() {
   const [opponent, setOpponent]         = useState<{name:string}>({name:'???'});
   const [questionOptions, setQuestionOptions] = useState<any[]>([]);
   const [problem, setProblem]           = useState<any>(null);
-  const [code, setCode]                 = useState('def solve():\n    pass\n');
+  const [language, setLanguage]         = useState<'python' | 'javascript'>('python');
+  const [code, setCode]                 = useState('');
   const [opponentCode, setOpponentCode] = useState('# Opponent is coding...\n');
   const [myProgress, setMyProgress]     = useState(0);
   const [oppProgress, setOppProgress]   = useState(0);
@@ -74,7 +75,7 @@ export default function BattleArena() {
       setPhase('battle');
       if (state.problem) {
         setProblem(state.problem);
-        setCode(state.problem.starterCode || 'def solve():\n    pass\n');
+        if (code === '') setCode(state.problem.starterCode || 'def solve():\n    pass\n');
       }
       if (state.players) {
         const opp = state.players.find((p: any) => p.id !== socket.id);
@@ -186,7 +187,7 @@ export default function BattleArena() {
       const res  = await fetch(`${BACKEND_URL}/api/execute`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ code, testCases: problem.testCases }),
+        body:    JSON.stringify({ code, language, testCases: problem.testCases }),
       });
       const data = await res.json();
       const results: any[] = data.results || [];
@@ -208,7 +209,7 @@ export default function BattleArena() {
       const res  = await fetch(`${BACKEND_URL}/api/execute`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ code, testCases: problem.testCases }),
+        body:    JSON.stringify({ code, language, testCases: problem.testCases }),
       });
       const data = await res.json();
       const results: any[] = data.results || [];
@@ -219,8 +220,6 @@ export default function BattleArena() {
       socket.emit('test-progress', { roomId: actualRoomId.current, passedCount: passed, totalCount: problem.testCases.length });
       if (data.success) {
         socket.emit('submit-code', { roomId: actualRoomId.current, code });
-      } else {
-        alert(`Only ${passed}/${problem.testCases.length} test cases passed. Fix your solution!`);
       }
     } catch (e) {
       alert('Execution server unreachable.');
@@ -603,7 +602,15 @@ export default function BattleArena() {
                   <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
                   <span className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
                 </div>
-                <span className="text-[11px] font-mono text-on-surface-variant">solution.py</span>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as any)}
+                  className="bg-transparent border border-white/10 rounded px-1 py-0.5 text-[11px] font-mono text-on-surface-variant outline-none cursor-pointer focus:border-primary/50"
+                  title="Select Language"
+                >
+                  <option value="python" className="bg-surface">solution.py</option>
+                  <option value="javascript" className="bg-surface">solution.js</option>
+                </select>
                 <div className="flex-1" />
                 <span className="text-[10px] font-mono text-tertiary font-bold">{myName.current}</span>
               </div>
@@ -620,7 +627,7 @@ export default function BattleArena() {
                 )}
                 <Editor
                   height="100%"
-                  defaultLanguage="python"
+                  language={language}
                   theme="vs-dark"
                   value={code}
                   onChange={(v) => !isFrozen && setCode(v || '')}
@@ -684,14 +691,21 @@ export default function BattleArena() {
                   <p className="text-on-surface-variant/40">Click "Run Tests" to see output here.</p>
                 )}
                 {testResults.map((r, i) => (
-                  <div key={i} className={`flex gap-2 items-start mb-1 ${r.passed ? 'text-emerald-400' : 'text-red-400'}`}>
-                    <span className="font-bold">[{r.passed ? 'PASS' : 'FAIL'}]</span>
-                    <span>
-                      Test {i + 1}
-                      {!r.passed && r.input && ` — Input: ${r.input}`}
-                      {!r.passed && r.expected && ` → Expected: ${r.expected}`}
-                      {!r.passed && r.actual && ` | Got: ${r.actual}`}
-                    </span>
+                  <div key={i} className={`flex flex-col mb-3 pb-2 border-b border-white/5 ${r.passed ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <div className="flex gap-2 items-start">
+                      <span className="font-bold shrink-0">[{r.passed ? 'PASS' : 'FAIL'}]</span>
+                      <span className="break-all whitespace-pre-wrap">
+                        Test {i + 1}
+                        {!r.passed && r.input && ` — Input: ${r.input}`}
+                        {!r.passed && r.expected && ` → Expected: ${r.expected}`}
+                        {!r.passed && r.actual && ` | Got: ${r.actual}`}
+                      </span>
+                    </div>
+                    {r.stderr && (
+                      <div className="mt-1 ml-10 text-red-500/90 font-mono text-[10px] whitespace-pre-wrap bg-red-950/30 p-2 rounded border border-red-500/20">
+                        {r.stderr}
+                      </div>
+                    )}
                   </div>
                 ))}
                 {testResults.length > 0 && (

@@ -43,19 +43,38 @@ app.post('/api/execute', async (req, res) => {
     let allPassed = true;
 
     for (const testCase of testCases) {
-      const payloadCode = `
+      let payloadCode = '';
+      let pistonOpts = {};
+
+      if (language === 'javascript') {
+        payloadCode = `
+${code}
+
+try {
+    const result = solve(${testCase.input});
+    console.log(result);
+} catch(e) {
+    console.error("Error:", e.message);
+}
+`;
+        pistonOpts = { language: 'javascript', version: '18.15.0' };
+      } else {
+        // Default to python
+        payloadCode = `
 ${code}
 
 try:
     result = solve(${testCase.input})
     print(result)
 except Exception as e:
-    print("Error:", str(e))
+    import sys
+    print("Error:", str(e), file=sys.stderr)
 `;
+        pistonOpts = { language: 'python', version: '3.10.0' };
+      }
 
       const response = await axios.post('https://emkc.org/api/v2/piston/execute', {
-          language: 'python',
-          version: '3.10.0',
+          ...pistonOpts,
           files: [{ content: payloadCode }]
       });
 
