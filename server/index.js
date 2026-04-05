@@ -133,7 +133,7 @@ app.post('/api/hint', async (req, res) => {
 Problem: ${problemDescription || 'A DSA problem'}
 YOUR PLAYER'S current code: \`\`\`\n${myCode}\n\`\`\`
 OPPONENT'S current code: \`\`\`\n${opponentCode}\n\`\`\`
-Analyze both and respond ONLY with JSON: { "opponentApproach": "...", "myApproach": "...", "keyDifference": "...", "urgentTip": "...", "suggestions": ["tip 1", "tip 2", "tip 3", "tip 4", "tip 5"], "opponentLeading": true, "threatLevel": "low"|"medium"|"high" }`;
+Analyze both and respond ONLY with JSON: { "opponentApproach": "...", "myApproach": "...", "keyDifference": "...", "urgentTip": "...", "suggestions": ["tip 1", "tip 2", "tip 3", "tip 4", "tip 5"], "opponentLeading": true, "threatLevel": "low"|"medium"|"high", "suggestedPowerup": "freeze"|"testcase"|"blur"|null, "powerupReason": "1 sentence why to use it now or null" }`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
@@ -167,7 +167,9 @@ Analyze both and respond ONLY with JSON: { "opponentApproach": "...", "myApproac
       urgentTip: 'Consider streamlining your data caching to reduce operational latency.',
       suggestions: combined.slice(0, Math.floor(Math.random() * 3) + 3),
       opponentLeading: Math.random() > 0.5,
-      threatLevel: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)]
+      threatLevel: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)],
+      suggestedPowerup: (['freeze', 'testcase', 'blur', null, null])[Math.floor(Math.random() * 5)],
+      powerupReason: 'The opponent is in a strong coding rhythm — now is a prime moment to break their focus.'
     });
   }
 });

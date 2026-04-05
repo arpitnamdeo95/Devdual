@@ -50,11 +50,15 @@ export default function BattleArena() {
     suggestions: string[];
     opponentLeading: boolean;
     threatLevel: 'low' | 'medium' | 'high';
+    suggestedPowerup?: 'freeze' | 'testcase' | 'blur' | null;
+    powerupReason?: string;
   }
   const [coachHint, setCoachHint] = useState<CoachHint | null>(null);
   const [coachLoading, setCoachLoading] = useState(false);
   const [coachOpen, setCoachOpen] = useState(true);
   const coachIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [powerupSuggestionAnim, setPowerupSuggestionAnim] = useState<{type: string; reason: string} | null>(null);
+  const powerupSuggestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ── powerups ─────────────────────────────────────────────── */
   const [hasFreeze, setHasFreeze] = useState(true);
@@ -302,6 +306,12 @@ export default function BattleArena() {
       });
       const data = await res.json();
       setCoachHint(data);
+      // If AI suggests a powerup, trigger the ambient overlay
+      if (data.suggestedPowerup && data.powerupReason) {
+        if (powerupSuggestionTimerRef.current) clearTimeout(powerupSuggestionTimerRef.current);
+        setPowerupSuggestionAnim({ type: data.suggestedPowerup, reason: data.powerupReason });
+        powerupSuggestionTimerRef.current = setTimeout(() => setPowerupSuggestionAnim(null), 7000);
+      }
     } catch (e) {
       // silently fail — don't disrupt gameplay
     }
@@ -544,7 +554,48 @@ export default function BattleArena() {
       <div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden">
         <AppSidebar />
 
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col overflow-hidden relative">
+
+          {/* ── AI POWERUP SUGGESTION OVERLAY ── */}
+          {powerupSuggestionAnim && (
+            <div className={`pointer-events-none absolute inset-0 z-50 flex flex-col items-end justify-end pb-6 pr-6 animate-in fade-in duration-500`}>
+              {/* Ambient edge glow */}
+              <div className={`absolute inset-0 opacity-20 pointer-events-none transition-all duration-700 ${
+                powerupSuggestionAnim.type === 'freeze'
+                  ? 'shadow-[inset_0_0_80px_rgba(59,130,246,0.6)]'
+                  : powerupSuggestionAnim.type === 'blur'
+                  ? 'shadow-[inset_0_0_80px_rgba(100,116,139,0.6)]'
+                  : 'shadow-[inset_0_0_80px_rgba(168,85,247,0.6)]'
+              }`}
+              style={{
+                boxShadow: powerupSuggestionAnim.type === 'freeze'
+                  ? 'inset 0 0 120px rgba(59,130,246,0.35)'
+                  : powerupSuggestionAnim.type === 'blur'
+                  ? 'inset 0 0 120px rgba(100,116,139,0.35)'
+                  : 'inset 0 0 120px rgba(168,85,247,0.35)'
+              }} />
+              {/* Toast notification */}
+              <div className={`flex items-start gap-3 px-5 py-4 rounded-2xl border backdrop-blur-xl shadow-2xl max-w-xs ${
+                powerupSuggestionAnim.type === 'freeze'
+                  ? 'bg-blue-950/80 border-blue-500/50 shadow-blue-500/20'
+                  : powerupSuggestionAnim.type === 'blur'
+                  ? 'bg-slate-900/80 border-slate-500/50 shadow-slate-500/20'
+                  : 'bg-purple-950/80 border-purple-500/50 shadow-purple-500/20'
+              }`}>
+                <span className="text-2xl mt-0.5">
+                  {powerupSuggestionAnim.type === 'freeze' ? '❄️' : powerupSuggestionAnim.type === 'blur' ? '💨' : '👁️'}
+                </span>
+                <div>
+                  <div className={`text-[9px] font-black uppercase tracking-[0.2em] mb-1 ${
+                    powerupSuggestionAnim.type === 'freeze' ? 'text-blue-300' : powerupSuggestionAnim.type === 'blur' ? 'text-slate-300' : 'text-purple-300'
+                  }`}>
+                    🧠 AI COACH — USE {powerupSuggestionAnim.type === 'freeze' ? 'BLIZZARD' : powerupSuggestionAnim.type === 'blur' ? 'SMOKE GRENADE' : 'BLIND'} NOW!
+                  </div>
+                  <p className="text-[10.5px] text-zinc-200 leading-snug">{powerupSuggestionAnim.reason}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── TOP STATUS BAR ── */}
           <div className="h-14 bg-surface-container border-b border-white/5 flex items-center px-6 gap-6 shrink-0">
@@ -628,7 +679,11 @@ export default function BattleArena() {
                 disabled={!hasFreeze || phase !== 'battle'}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative group shrink-0 ${
                   hasFreeze 
-                    ? 'bg-surface hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
+                    ? `bg-surface hover:bg-blue-500/20 text-blue-400 border ${
+                        powerupSuggestionAnim?.type === 'freeze'
+                          ? 'border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.7)] animate-pulse'
+                          : 'border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                      }`
                     : 'bg-surface text-on-surface-variant opacity-30 cursor-not-allowed border border-white/5'
                 }`}
               >
@@ -643,7 +698,11 @@ export default function BattleArena() {
                 disabled={!hasTestcaseDisable || phase !== 'battle'}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative group shrink-0 ${
                   hasTestcaseDisable 
-                    ? 'bg-surface hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.3)]' 
+                    ? `bg-surface hover:bg-purple-500/20 text-purple-400 border ${
+                        powerupSuggestionAnim?.type === 'testcase'
+                          ? 'border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.7)] animate-pulse'
+                          : 'border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
+                      }`
                     : 'bg-surface text-on-surface-variant opacity-30 cursor-not-allowed border border-white/5'
                 }`}
               >
@@ -658,7 +717,11 @@ export default function BattleArena() {
                 disabled={!hasBlur || phase !== 'battle'}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative group shrink-0 ${
                   hasBlur 
-                    ? 'bg-surface hover:bg-slate-500/20 text-slate-400 border border-slate-500/30 shadow-[0_0_15px_rgba(100,116,139,0.3)]' 
+                    ? `bg-surface hover:bg-slate-500/20 text-slate-400 border ${
+                        powerupSuggestionAnim?.type === 'blur'
+                          ? 'border-slate-400 shadow-[0_0_25px_rgba(100,116,139,0.7)] animate-pulse'
+                          : 'border-slate-500/30 shadow-[0_0_15px_rgba(100,116,139,0.3)]'
+                      }`
                     : 'bg-surface text-on-surface-variant opacity-30 cursor-not-allowed border border-white/5'
                 }`}
               >
@@ -914,6 +977,33 @@ export default function BattleArena() {
                           </div>
                           <p className="text-[10.5px] text-zinc-100/90 leading-relaxed font-medium">{coachHint.urgentTip}</p>
                         </div>
+
+                        {coachHint.suggestedPowerup && (
+                          <div
+                            className={`relative overflow-hidden rounded-lg p-2.5 border animate-pulse ${
+                              coachHint.suggestedPowerup === 'freeze'
+                                ? 'bg-blue-500/10 border-blue-500/40 shadow-[0_0_18px_rgba(59,130,246,0.25)]'
+                                : coachHint.suggestedPowerup === 'blur'
+                                ? 'bg-slate-500/10 border-slate-400/40 shadow-[0_0_18px_rgba(100,116,139,0.25)]'
+                                : 'bg-purple-500/10 border-purple-500/40 shadow-[0_0_18px_rgba(168,85,247,0.25)]'
+                            }`}
+                          >
+                            <div className="absolute inset-0 opacity-[0.03] bg-gradient-to-br from-white to-transparent pointer-events-none" />
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-base ${
+                                coachHint.suggestedPowerup === 'freeze' ? '❄️' : coachHint.suggestedPowerup === 'blur' ? '💨' : '👁️'
+                              }`}>
+                                {coachHint.suggestedPowerup === 'freeze' ? '❄️' : coachHint.suggestedPowerup === 'blur' ? '💨' : '👁️'}
+                              </span>
+                              <span className={`text-[8px] font-black uppercase tracking-widest ${
+                                coachHint.suggestedPowerup === 'freeze' ? 'text-blue-400' : coachHint.suggestedPowerup === 'blur' ? 'text-slate-400' : 'text-purple-400'
+                              }`}>
+                                USE {coachHint.suggestedPowerup === 'freeze' ? 'BLIZZARD' : coachHint.suggestedPowerup === 'blur' ? 'SMOKE GRENADE' : 'BLIND'} NOW!
+                              </span>
+                            </div>
+                            <p className="text-[9.5px] text-zinc-300/80 leading-snug">{coachHint.powerupReason}</p>
+                          </div>
+                        )}
 
                         <div className="flex flex-col gap-1">
                           <span className="text-[7.5px] font-black uppercase tracking-[0.2em] text-zinc-600 mb-1">Threat Analysis</span>

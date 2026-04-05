@@ -36,7 +36,9 @@ Analyze both and respond ONLY with valid JSON (no markdown, no extra text) in th
   "urgentTip": "1 sentence: the single most important thing the player should change RIGHT NOW to improve their solution",
   "suggestions": ["tip 1", "tip 2", "tip 3", "tip 4", "tip 5"],
   "opponentLeading": true or false,
-  "threatLevel": "low" | "medium" | "high"
+  "threatLevel": "low" | "medium" | "high",
+  "suggestedPowerup": "freeze" | "testcase" | "blur" | null,
+  "powerupReason": "1 sentence: why the player should use this powerup RIGHT NOW (only if suggestedPowerup is not null)"
 }`;
 
     const response = await ai.models.generateContent({
@@ -78,7 +80,9 @@ Analyze both and respond ONLY with valid JSON (no markdown, no extra text) in th
       urgentTip: 'Consider replacing the nested loop with a hash set.',
       suggestions: randomSuggestions,
       opponentLeading: Math.random() > 0.5,
-      threatLevel: randomThreat
+      threatLevel: randomThreat,
+      suggestedPowerup: (['freeze', 'testcase', 'blur', null, null])[Math.floor(Math.random() * 5)],
+      powerupReason: 'Opponent is in a productive flow right now — disrupting them could change the outcome.'
     });
   }
 }
