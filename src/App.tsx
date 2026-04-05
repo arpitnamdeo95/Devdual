@@ -1,7 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
 import LobbyDashboard from './pages/LobbyDashboard';
 import BattleArena from './pages/BattleArena';
 import SpectatorView from './pages/SpectatorView';
@@ -26,8 +24,6 @@ function App() {
           <Routes>
             {/* Landing page — the entry point */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
 
             {/* App shell — lobby, arena, spectator, review */}
             <Route path="/app" element={<LobbyDashboard />} />

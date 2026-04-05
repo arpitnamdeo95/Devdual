@@ -6,9 +6,13 @@ export default function BossSelection() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-200 font-body">
-      <AppNavbar />
-      <div className="flex pt-16 h-[calc(100vh-64px)] overflow-hidden">
+    <div className="min-h-screen bg-background text-on-surface font-body relative pb-12">
+      <div className="absolute inset-0 obsidian-grid opacity-20 pointer-events-none z-0"></div>
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] -z-10 animate-pulse"></div>
+      <div className="relative z-50">
+        <AppNavbar />
+      </div>
+      <div className="flex pt-16 h-[calc(100vh-64px)] overflow-hidden relative z-10">
         <AppSidebar />
         
         <main className="flex-1 p-8 overflow-y-auto relative">

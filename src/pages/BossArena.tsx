@@ -131,20 +131,24 @@ export default function BossArena() {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-[#0f172a] text-slate-200 font-body">
+    <div className="h-screen flex flex-col bg-background text-on-surface font-body relative">
+      <div className="absolute inset-0 obsidian-grid opacity-20 pointer-events-none z-0"></div>
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] -z-10 animate-pulse"></div>
       {phase !== 'playing' && <GameOverOverlay />}
-      <AppNavbar />
+      <div className="relative z-50">
+        <AppNavbar />
+      </div>
       
-      <div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden">
+      <div className="flex flex-1 flex-row pt-16 w-full h-full overflow-hidden relative z-10">
         <AppSidebar />
 
         <main className="flex-1 flex flex-col overflow-hidden">
           
           {/* ── TOP BAR (GAME HUD) ── */}
-          <div className="h-20 bg-[#1e293b] border-b border-slate-700/50 shrink-0 flex items-center px-8 gap-8 shadow-md z-10">
+          <div className="h-20 bg-surface-container-high border-b border-white/5 shrink-0 flex items-center px-8 gap-8 shadow-md z-10">
             {/* Boss Info */}
             <div className="flex-1 space-y-2">
-              <div className="flex justify-between items-end font-mono text-[10px] tracking-widest uppercase text-slate-400">
+              <div className="flex justify-between items-end font-mono text-[10px] tracking-widest uppercase text-on-surface-variant">
                 <span className="flex items-center gap-2">
                   <span className={`material-symbols-outlined text-lg bg-clip-text text-transparent bg-gradient-to-br ${boss.color}`}>{boss.icon}</span>
                   {boss.name}
@@ -183,7 +187,7 @@ export default function BossArena() {
 
           <div className="flex-1 flex overflow-hidden">
             {/* ── LEFT PANE: PROBLEM STATEMENT ── */}
-            <aside className="w-[350px] shrink-0 bg-[#0f172a] border-r border-slate-700/50 overflow-y-auto px-6 py-6 custom-scrollbar">
+            <aside className="w-[350px] shrink-0 bg-surface border-r border-white/5 overflow-y-auto px-6 py-8 custom-scrollbar">
                <div className="inline-block px-2 py-1 rounded bg-indigo-500/10 text-indigo-400 font-mono text-[10px] uppercase tracking-widest font-bold mb-4 border border-indigo-500/20">
                  {question.difficulty}
                </div>

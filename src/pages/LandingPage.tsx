@@ -32,16 +32,7 @@ export default function LandingPage() {
 <button onClick={() => navigate('/app')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Compete</button>
 </div>
 </div>
-<div className="flex items-center gap-3">
-<button
-  onClick={() => navigate('/login')}
-  className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 text-sm font-medium px-4 py-1.5 cursor-pointer active:scale-95"
->Login</button>
-<button
-  onClick={() => navigate('/signup')}
-  className="bg-gradient-to-r from-[#4f7aff] to-[#adc6ff] text-[#0a1033] px-5 py-1.5 rounded-lg text-sm font-bold tracking-tight active:scale-95 transition-all hover:opacity-90 shadow-[0_0_16px_rgba(79,122,255,0.3)]"
->Get Started</button>
-</div>
+
 </div>
 </nav>
 

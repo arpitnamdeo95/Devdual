@@ -1,0 +1,11 @@
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	st2.txt
+	st3.txt
+	st_new.txt
+	vercel_deploy.txt
+
+nothing added to commit but untracked files present (use "git add" to track)

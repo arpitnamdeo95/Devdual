@@ -1,10 +1,11 @@
 import { AppNavbar, AppSidebar } from '../components/AppLayout';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { socket } from '../socket';
 import QuestionSelector from '../components/QuestionSelector';
 import { useSpacetime } from '../spacetimeProvider';
+import { Brain, Zap, AlertTriangle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 
 /* ─────────────────────────────────────────────── helpers ─── */
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -39,6 +40,21 @@ export default function BattleArena() {
   const [gameResult, setGameResult]     = useState<{won:boolean;message:string}|null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const myName = useRef(`Player_${Math.floor(Math.random() * 9000) + 1000}`);
+
+  /* ── AI Coach state ───────────────────────────────────────── */
+  interface CoachHint {
+    opponentApproach: string;
+    myApproach: string;
+    keyDifference: string;
+    urgentTip: string;
+    suggestions: string[];
+    opponentLeading: boolean;
+    threatLevel: 'low' | 'medium' | 'high';
+  }
+  const [coachHint, setCoachHint] = useState<CoachHint | null>(null);
+  const [coachLoading, setCoachLoading] = useState(false);
+  const [coachOpen, setCoachOpen] = useState(true);
+  const coachIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   /* ── powerups ─────────────────────────────────────────────── */
   const [hasFreeze, setHasFreeze] = useState(true);
@@ -259,6 +275,46 @@ export default function BattleArena() {
   };
 
   const timerColor = timer < 300 ? 'text-red-400' : timer < 600 ? 'text-yellow-400' : 'text-emerald-400';
+
+  /* ── AI Coach: fetch hint ─────────────────────────────────── */
+  const fetchCoachHint = useCallback(async () => {
+    if (phase !== 'battle') return;
+    const oppCode = opponentCode.trim();
+    const myCode = code.trim();
+    if (oppCode.length < 20 || myCode.length < 5) return;
+    setCoachLoading(true);
+    try {
+      const res = await fetch('/api/hint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          myCode,
+          opponentCode: oppCode,
+          problemDescription: problem?.description || ''
+        })
+      });
+      const data = await res.json();
+      setCoachHint(data);
+    } catch (e) {
+      // silently fail — don't disrupt gameplay
+    }
+    setCoachLoading(false);
+  }, [phase, opponentCode, code, problem]);
+
+  /* ── AI Coach: poll every 30s during battle ───────────────── */
+  useEffect(() => {
+    if (phase !== 'battle') {
+      if (coachIntervalRef.current) clearInterval(coachIntervalRef.current);
+      return;
+    }
+    // Initial fetch after 10s to let both players write some code
+    const initialTimer = setTimeout(() => fetchCoachHint(), 10000);
+    coachIntervalRef.current = setInterval(() => fetchCoachHint(), 30000);
+    return () => {
+      clearTimeout(initialTimer);
+      if (coachIntervalRef.current) clearInterval(coachIntervalRef.current);
+    };
+  }, [phase, fetchCoachHint]);
 
   /* ══════════════════════════════════════════════════════════════
      PHASE: WAITING  (direct demo URL or newly mounted)
@@ -767,8 +823,9 @@ export default function BattleArena() {
               </div>
             </section>
 
-            {/* ── OPPONENT EDITOR (read-only live feed) ── */}
-            <section className="w-80 shrink-0 flex flex-col border-l border-white/5">
+            {/* ── OPPONENT EDITOR + AI COACH ── */}
+            {/* ── OPPONENT EDITOR + AI COACH ── */}
+            <section className="w-96 shrink-0 flex flex-col border-l border-white/5 h-full bg-[#0a0a0f]">
               {/* Opponent header */}
               <div className="h-9 bg-surface-container flex items-center px-4 gap-3 border-b border-white/5 shrink-0">
                 <div className="flex gap-1 mr-2">
@@ -778,10 +835,87 @@ export default function BattleArena() {
                 </div>
                 <span className="text-[11px] font-mono text-on-surface-variant flex-1">opponent.py</span>
                 <span className="text-[10px] font-mono text-primary font-bold">{opponent.name}</span>
-                <span className="w-2 h-2 rounded-full bg-error animate-pulse shrink-0" title="Live" />
+                <div className="w-2 h-2 rounded-full bg-error animate-pulse shrink-0" title="Live" />
               </div>
 
-              <div className="flex-1 relative bg-[#0d0d12]">
+              {/* ── AI COACH PANEL ── */}
+              <div className="bg-[#0b0c14] flex flex-col overflow-hidden shrink-0 border-b border-white/5" style={{ minHeight: coachOpen ? '240px' : '36px', maxHeight: coachOpen ? '280px' : '36px', transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                {/* Header */}
+                <div
+                  className="h-9 px-4 flex items-center gap-2 cursor-pointer hover:bg-white/5 transition-colors shrink-0 group"
+                  onClick={() => setCoachOpen(o => !o)}
+                >
+                  <Brain size={12} className={`text-[#a78bfa] ${coachLoading ? 'animate-pulse' : ''}`} />
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#a78bfa]/80 group-hover:text-[#a78bfa] transition-colors">AI Strategic Intelligence</span>
+                  {coachHint && (
+                    <span className={`ml-1 px-1.5 py-0.5 rounded-[4px] text-[7.5px] font-black uppercase ${
+                      coachHint.threatLevel === 'high' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                      coachHint.threatLevel === 'medium' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                      'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    }`}>
+                      TRT: {coachHint.threatLevel}
+                    </span>
+                  )}
+                  <div className="flex-1" />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); fetchCoachHint(); }}
+                    disabled={coachLoading}
+                    className="p-1 rounded bg-white/5 hover:bg-white/10 text-zinc-500 hover:text-[#a78bfa] transition-all disabled:opacity-30"
+                  >
+                    <RefreshCw size={9} className={coachLoading ? 'animate-spin' : ''} />
+                  </button>
+                </div>
+
+                {/* Body */}
+                {coachOpen && (
+                  <div className="flex-1 overflow-y-auto p-3 space-y-3 code-editor-scrollbar bg-black/20">
+                    {!coachHint && !coachLoading && (
+                      <div className="text-center py-6 opacity-40">
+                         <p className="text-[9px] font-mono uppercase tracking-tighter">Initializing Neural Stream...</p>
+                      </div>
+                    )}
+                    {coachLoading && !coachHint && (
+                      <div className="text-center py-6 space-y-2">
+                        <div className="flex justify-center gap-1">
+                          {[0,1,2].map(i => (
+                            <div key={i} className="w-1 h-1 rounded-full bg-[#a78bfa] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {coachHint && (
+                      <>
+                        <div className="bg-[#a78bfa]/10 border border-[#a78bfa]/20 rounded-lg p-2.5 shadow-inner">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <Zap size={9} className="text-[#a78bfa]" />
+                            <span className="text-[8px] font-black uppercase tracking-widest text-[#a78bfa]">Critical Advice</span>
+                          </div>
+                          <p className="text-[10.5px] text-zinc-100/90 leading-relaxed font-medium">{coachHint.urgentTip}</p>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[7.5px] font-black uppercase tracking-[0.2em] text-zinc-600 mb-1">Threat Analysis</span>
+                          <div className="p-2 rounded-lg bg-white/[0.02] border border-white/5">
+                             <p className="text-[10px] text-zinc-400 leading-tight italic">"{coachHint.keyDifference}"</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                           {coachHint.suggestions?.slice(0, 2).map((s, i) => (
+                             <div key={i} className="flex gap-2 items-center p-2 rounded-md bg-black/40 border border-white/5">
+                               <div className="w-0.5 h-3 bg-primary/40 rounded-full shrink-0" />
+                               <p className="text-[9.5px] text-zinc-500 font-medium leading-snug">{s}</p>
+                             </div>
+                           ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* ── OPPONENT EDITOR ── */}
+              <div className="flex-1 relative bg-[#08080c]">
                 <Editor
                   height="100%"
                   defaultLanguage="python"
@@ -802,29 +936,29 @@ export default function BattleArena() {
                   }}
                   loading={
                     <div className="flex h-full items-center justify-center text-zinc-600 font-mono text-xs">
-                      Waiting for opponent...
+                      Synchronizing...
                     </div>
                   }
                 />
-                {/* Overlay label */}
-                <div className="absolute top-2 right-2 px-2 py-0.5 bg-black/60 rounded text-[9px] font-mono text-on-surface-variant/60 uppercase tracking-widest pointer-events-none">
-                  Read Only
+                <div className="absolute top-2 right-2 px-2 py-0.5 bg-black/60 rounded text-[9px] font-mono text-on-surface-variant/40 uppercase tracking-widest pointer-events-none border border-white/5">
+                  Stream
                 </div>
               </div>
 
-              {/* Opponent stats */}
-              <div className="h-12 bg-surface-container-high border-t border-white/5 flex items-center px-4 gap-4 shrink-0">
-                <div>
-                  <div className="text-[9px] font-mono text-on-surface-variant uppercase">Lines</div>
-                  <div className="text-xs font-mono text-on-surface">{opponentCode.split('\n').length}</div>
+              {/* ── OPPONENT STATS ── */}
+              <div className="h-9 bg-surface-container-high border-t border-white/5 flex items-center px-4 gap-4 shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[8px] font-black text-on-surface-variant/40 uppercase">Lines</span>
+                  <span className="text-[10px] font-mono text-on-surface">{opponentCode.split('\n').length}</span>
                 </div>
-                <div>
-                  <div className="text-[9px] font-mono text-on-surface-variant uppercase">Characters</div>
-                  <div className="text-xs font-mono text-on-surface">{opponentCode.length}</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[8px] font-black text-on-surface-variant/40 uppercase">Chars</span>
+                  <span className="text-[10px] font-mono text-on-surface">{opponentCode.length}</span>
                 </div>
                 <div className="flex-1" />
-                <div className="text-[9px] font-mono text-primary/60 uppercase animate-pulse">
-                  Live Feed
+                <div className="flex items-center gap-1.5">
+                   <div className="w-1 h-1 rounded-full bg-primary" />
+                   <div className="text-[9px] font-mono text-primary/60 font-black uppercase">Active</div>
                 </div>
               </div>
             </section>

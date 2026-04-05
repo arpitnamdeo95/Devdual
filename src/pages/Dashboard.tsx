@@ -13,7 +13,13 @@ export default function Dashboard() {
       .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
   );
 
-  const getStat = (id: string) => stats.find(s => s.statId === id)?.value || '0';
+  const demoData: Record<string, string> = {
+    'active_players': '7',
+    'matches_in_progress': '3',
+    'total_matches_played': '9',
+    'average_match_time': '8'
+  };
+  const getStat = (id: string) => stats.find(s => s.statId === id)?.value || demoData[id] || '0';
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-body">
