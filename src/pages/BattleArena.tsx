@@ -143,7 +143,7 @@ export default function BattleArena() {
     const onPowerupActivated = (data: { type: string, userId: string, userName?: string }) => {
       const { type, userName } = data;
       setActivePowerupAnim({ type, byMe: false, userName });
-      setTimeout(() => setActivePowerupAnim(null), 3000);
+      setTimeout(() => setActivePowerupAnim(null), 3500);
 
       if (type === 'freeze') {
         setIsFrozen(true);
@@ -224,7 +224,7 @@ export default function BattleArena() {
 
     socket.emit('use-powerup', { roomId: actualRoomId.current, type });
     setActivePowerupAnim({ type, byMe: true, userName: myName.current });
-    setTimeout(() => setActivePowerupAnim(null), 3000);
+    setTimeout(() => setActivePowerupAnim(null), 3500);
   };
 
   const handleRunTests = async () => {
@@ -521,32 +521,53 @@ export default function BattleArena() {
   return (
     <div className="h-screen flex flex-col bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
 
-      {/* ── POWERUP OVERLAY ANIMATION ── */}
+      {/* ── POWERUP CAST ANIMATION OVERLAY ── */}
       {activePowerupAnim && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/50 backdrop-blur-md transition-all duration-300">
-           {/* Epic 3D floating and scaling effect */}
+        <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none bg-black/60 backdrop-blur-md">
            <div className={`
              flex flex-col items-center justify-center
-             transform scale-150 animate-powerup-epic
+             transform scale-100
              drop-shadow-[0_0_80px_rgba(255,255,255,0.4)]
-             ${activePowerupAnim.type === 'freeze' ? 'text-blue-300' : 'text-purple-400'}
+             ${activePowerupAnim.type === 'freeze' ? 'text-blue-300' : activePowerupAnim.type === 'blur' ? 'text-slate-300' : 'text-purple-400'}
            `}>
-              <div className="text-2xl md:text-3xl font-black mb-2 tracking-[0.2em] text-white opacity-90 slide-down-fade">
-                {activePowerupAnim.byMe ? "YOU CAST" : `${activePowerupAnim.userName || "OPPONENT"} CAST`}
-              </div>
-              <div className={`
-                text-7xl md:text-9xl font-black italic tracking-tighter uppercase
-                border-[10px] rounded-3xl px-12 py-6
-                shadow-[inset_0_0_50px_currentColor] 
-                ${activePowerupAnim.type === 'freeze' ? 'border-blue-400 bg-blue-900/30 text-blue-200' : activePowerupAnim.type === 'blur' ? 'border-slate-500 bg-slate-900/40 text-slate-300' : 'border-purple-500 bg-purple-900/30 text-purple-200'}
-                scale-up-elastic
-              `}>
-                {activePowerupAnim.type === 'freeze' ? '❄️ FREEZE ❄️' : activePowerupAnim.type === 'blur' ? '💨 SMOKE 💨' : '👁️ BLIND 👁️'}
-              </div>
-              <div className="mt-6 text-xl md:text-2xl text-white font-mono opacity-80 slide-up-fade">
-                {activePowerupAnim.type === 'freeze' ? 'Opponent code editor locked (10s)' : activePowerupAnim.type === 'blur' ? 'Opponent code editor obscured (10s)' : 'Opponent test cases hidden (30s)'}
-              </div>
-           </div>
+             {/* Who cast label */}
+             <div className="text-2xl md:text-3xl font-black mb-4 tracking-[0.2em] text-white opacity-90 uppercase animate-bounce">
+               {activePowerupAnim.byMe
+                 ? '⚡ YOU CAST ⚡'
+                 : `💥 ${activePowerupAnim.userName || 'OPPONENT'} CAST 💥`}
+             </div>
+             {/* Powerup name big block */}
+             <div className={`
+               text-6xl md:text-8xl font-black italic tracking-tighter uppercase
+               border-[8px] rounded-3xl px-10 py-5
+               shadow-[inset_0_0_60px_currentColor]
+               ${activePowerupAnim.type === 'freeze'
+                 ? 'border-blue-400 bg-blue-900/40 text-blue-200 shadow-[0_0_80px_rgba(59,130,246,0.6)]'
+                 : activePowerupAnim.type === 'blur'
+                 ? 'border-slate-400 bg-slate-900/50 text-slate-200 shadow-[0_0_80px_rgba(100,116,139,0.6)]'
+                 : 'border-purple-500 bg-purple-900/40 text-purple-200 shadow-[0_0_80px_rgba(168,85,247,0.6)]'}
+             `}>
+               {activePowerupAnim.type === 'freeze' ? '❄️ FREEZE ❄️' : activePowerupAnim.type === 'blur' ? '💨 SMOKE 💨' : '👁️ BLIND 👁️'}
+             </div>
+             {/* Effect description — different perspective for caster vs receiver */}
+             <div className="mt-6 text-lg md:text-xl text-white/80 font-mono uppercase tracking-widest text-center px-8">
+               {activePowerupAnim.byMe ? (
+                 // Caster perspective
+                 activePowerupAnim.type === 'freeze'
+                   ? 'Opponent editor locked for 10s'
+                   : activePowerupAnim.type === 'blur'
+                   ? 'Opponent screen obscured for 10s'
+                   : 'Opponent test cases hidden for 30s'
+               ) : (
+                 // Receiver perspective
+                 activePowerupAnim.type === 'freeze'
+                   ? '🚨 YOUR editor is locked for 10s!'
+                   : activePowerupAnim.type === 'blur'
+                   ? '🚨 YOUR screen is obscured for 10s!'
+                   : '🚨 YOUR test cases are hidden for 30s!'
+               )}
+             </div>
+          </div>
         </div>
       )}
 
