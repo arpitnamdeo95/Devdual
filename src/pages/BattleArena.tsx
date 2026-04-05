@@ -102,7 +102,7 @@ export default function BattleArena() {
       setPhase('ended');
 
       if (won && data.winnerIdentity && data.loserIdentity) {
-         conn.reducers.endMatch({ 
+         conn?.reducers.endMatch({ 
            matchId: actualRoomId.current, 
            codeUpdates: JSON.stringify({ winningCode: data.winningCode, loserCode: data.loserCode }),
            winnerId: data.winnerIdentity, 
@@ -111,9 +111,9 @@ export default function BattleArena() {
 
          setTimeout(() => {
            if (timer >= 28 * 60) {
-              conn.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'fast_solver' });
+              conn?.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'fast_solver' });
            }
-           conn.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'first_win' });
+           conn?.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'first_win' });
          }, 500);
       }
     };
