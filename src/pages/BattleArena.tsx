@@ -59,8 +59,10 @@ export default function BattleArena() {
   /* ── powerups ─────────────────────────────────────────────── */
   const [hasFreeze, setHasFreeze] = useState(true);
   const [hasTestcaseDisable, setHasTestcaseDisable] = useState(true);
+  const [hasBlur, setHasBlur] = useState(true);
   const [isFrozen, setIsFrozen] = useState(false);
   const [testcaseDisabled, setTestcaseDisabled] = useState(false);
+  const [isBlurred, setIsBlurred] = useState(false);
   const [activePowerupAnim, setActivePowerupAnim] = useState<{type: string, byMe: boolean, userName?: string} | null>(null);
 
   /* ── is this a direct demo URL? ─────────────────────────── */
@@ -145,6 +147,9 @@ export default function BattleArena() {
       } else if (type === 'testcase') {
         setTestcaseDisabled(true);
         setTimeout(() => setTestcaseDisabled(false), 30000);
+      } else if (type === 'blur') {
+        setIsBlurred(true);
+        setTimeout(() => setIsBlurred(false), 10000);
       }
     };
 
@@ -203,13 +208,15 @@ export default function BattleArena() {
     socket.emit('cancel-match');
   };
 
-  const handleUsePowerup = (type: 'freeze' | 'testcase') => {
+  const handleUsePowerup = (type: 'freeze' | 'testcase' | 'blur') => {
     if (phase !== 'battle') return;
     if (type === 'freeze' && !hasFreeze) return;
     if (type === 'testcase' && !hasTestcaseDisable) return;
+    if (type === 'blur' && !hasBlur) return;
 
     if (type === 'freeze') setHasFreeze(false);
     if (type === 'testcase') setHasTestcaseDisable(false);
+    if (type === 'blur') setHasBlur(false);
 
     socket.emit('use-powerup', { roomId: actualRoomId.current, type });
     setActivePowerupAnim({ type, byMe: true, userName: myName.current });
@@ -521,13 +528,13 @@ export default function BattleArena() {
                 text-7xl md:text-9xl font-black italic tracking-tighter uppercase
                 border-[10px] rounded-3xl px-12 py-6
                 shadow-[inset_0_0_50px_currentColor] 
-                ${activePowerupAnim.type === 'freeze' ? 'border-blue-400 bg-blue-900/30 text-blue-200' : 'border-purple-500 bg-purple-900/30 text-purple-200'}
+                ${activePowerupAnim.type === 'freeze' ? 'border-blue-400 bg-blue-900/30 text-blue-200' : activePowerupAnim.type === 'blur' ? 'border-slate-500 bg-slate-900/40 text-slate-300' : 'border-purple-500 bg-purple-900/30 text-purple-200'}
                 scale-up-elastic
               `}>
-                {activePowerupAnim.type === 'freeze' ? '❄️ FREEZE ❄️' : '👁️ BLIND 👁️'}
+                {activePowerupAnim.type === 'freeze' ? '❄️ FREEZE ❄️' : activePowerupAnim.type === 'blur' ? '💨 SMOKE 💨' : '👁️ BLIND 👁️'}
               </div>
               <div className="mt-6 text-xl md:text-2xl text-white font-mono opacity-80 slide-up-fade">
-                {activePowerupAnim.type === 'freeze' ? 'Opponent code editor locked (10s)' : 'Opponent test cases hidden (30s)'}
+                {activePowerupAnim.type === 'freeze' ? 'Opponent code editor locked (10s)' : activePowerupAnim.type === 'blur' ? 'Opponent code editor obscured (10s)' : 'Opponent test cases hidden (30s)'}
               </div>
            </div>
         </div>
@@ -645,6 +652,21 @@ export default function BattleArena() {
                 </div>
                 <span className="material-symbols-outlined text-[20px]">visibility_off</span>
               </button>
+
+              <button 
+                onClick={() => handleUsePowerup('blur')}
+                disabled={!hasBlur || phase !== 'battle'}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative group shrink-0 ${
+                  hasBlur 
+                    ? 'bg-surface hover:bg-slate-500/20 text-slate-400 border border-slate-500/30 shadow-[0_0_15px_rgba(100,116,139,0.3)]' 
+                    : 'bg-surface text-on-surface-variant opacity-30 cursor-not-allowed border border-white/5'
+                }`}
+              >
+                <div className="absolute left-14 hidden group-hover:flex whitespace-nowrap bg-surface-container-high px-2 py-1 rounded border border-white/10 text-[10px] font-mono shadow-xl z-50">
+                  Smoke Grenade (10s)
+                </div>
+                <span className="material-symbols-outlined text-[20px]">smoke_free</span>
+              </button>
             </div>
 
             {/* ── PROBLEM PANEL ── */}
@@ -719,7 +741,7 @@ export default function BattleArena() {
                 <span className="text-[10px] font-mono text-tertiary font-bold">{myName.current}</span>
               </div>
 
-              <div className="flex-1 relative">
+              <div className={`flex-1 relative ${isBlurred ? 'blur-[6px] pointer-events-none' : ''}`}>
                 {isFrozen && (
                   <div className="absolute inset-0 z-[60] bg-blue-900/20 backdrop-blur-[2px] flex items-center justify-center pointer-events-none border-2 border-blue-500/50">
                     <div className="text-blue-400 font-black tracking-widest text-4xl animate-pulse drop-shadow-xl flex items-center gap-4">
