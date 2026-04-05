@@ -923,7 +923,7 @@ export default function BattleArena() {
                         </div>
 
                         <div className="space-y-1.5">
-                           {coachHint.suggestions?.slice(0, 2).map((s, i) => (
+                           {coachHint.suggestions?.slice(0, 5).map((s, i) => (
                              <div key={i} className="flex gap-2 items-center p-2 rounded-md bg-black/40 border border-white/5">
                                <div className="w-0.5 h-3 bg-primary/40 rounded-full shrink-0" />
                                <p className="text-[9.5px] text-zinc-500 font-medium leading-snug">{s}</p>
