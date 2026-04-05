@@ -8,7 +8,7 @@ const { exec }   = require('child_process');
 const fs         = require('fs');
 const path       = require('path');
 const os         = require('os');
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app    = express();
 const server = http.createServer(app);
@@ -119,11 +119,8 @@ app.post('/api/execute', async (req, res) => {
 });
 
 /* ─────────────────────────────────────────────────────────────────────────────
-<<<<<<< HEAD
    POST /api/ai-review  (Gemini-powered AI Code Coach)
 ───────────────────────────────────────────────────────────────────────────── */
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
 app.post('/api/ai-review', async (req, res) => {
   const { code, language = 'python', problemTitle = '', problemDescription = '' } = req.body;
 
@@ -133,7 +130,7 @@ app.post('/api/ai-review', async (req, res) => {
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    // Fallback to a high-quality mock if no API key is configured
+    // Fallback if no API key is configured
     return res.json({
       timeComplexity: 'O(n)',
       spaceComplexity: 'O(n)',
@@ -142,6 +139,7 @@ app.post('/api/ai-review', async (req, res) => {
       codeSmells: [
         { severity: 'warning', title: 'Non-descriptive variable names', description: 'Variables like `x`, `i`, `tmp` make the code harder to maintain. Use descriptive names like `current_sum` or `target_index`.', line: null },
         { severity: 'info', title: 'Missing edge case handling', description: 'The solution does not handle empty input or single-element arrays. Adding guard clauses improves robustness.', line: null },
+        { severity: 'warning', title: 'No input validation', description: 'The function assumes valid input types. Adding type checks prevents runtime errors in production environments.', line: null },
       ],
       strengths: [
         'Correct use of hash-based lookup for O(1) average access time',
@@ -191,7 +189,6 @@ Be specific to the ACTUAL code submitted. Identify real issues, not generic advi
     const result = await model.generateContent(prompt);
     const text = result.response.text();
 
-    // Strip potential markdown code fences
     const cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
     const parsed = JSON.parse(cleaned);
 
@@ -202,81 +199,16 @@ Be specific to the ACTUAL code submitted. Identify real issues, not generic advi
   }
 });
 
-/* Legacy endpoint kept for backwards compat */
+/* Legacy endpoint kept for backwards compat (mocked) */
 app.post('/api/review', (_req, res) => {
   res.json({
-    winnerAdvantage: 'Player wrote cleaner, more efficient code with O(n) time complexity.',
-    loserMistakes:   'Opponent used a nested loop resulting in O(n^2) time complexity.',
-    suggestions:     'Consider using a hash map to optimize lookups.',
+    complexityComparison: 'Analyzed using static code metrics.',
+    winnerAdvantage: 'High algorithmic efficiency and clear naming.',
+    loserMistakes:   'Nested loops detected in search path.',
+    suggestions:     ['Use hash maps for O(1) lookups', 'Optimize recursion depth'],
+    winnerScore: 100,
+    loserScore: 50
   });
-=======
-   POST /api/review  (Gemini Analysis)
-───────────────────────────────────────────────────────────────────────────── */
-app.post('/api/review', async (req, res) => {
-  const { winnerCode, loserCode, problemDescription } = req.body;
-
-  if (!winnerCode || !loserCode) {
-    return res.status(400).json({ error: 'Missing winner or loser code' });
-  }
-
-  try {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-    const prompt = `
-You are an expert programming judge. Analyze the winner's and loser's code for a coding challenge.
-Problem Description:
-${problemDescription || 'Not provided'}
-
-Winner's Code:
-${winnerCode}
-
-Loser's Code:
-${loserCode}
-
-Evaluate both submissions. Return a JSON object strictly conforming to this structure, without any markdown formatting or extra text:
-{
-  "complexityComparison": "A 1-2 sentence comparison of time and space complexity.",
-  "winnerAdvantage": "A 1-2 sentence explanation of what the winner did better.",
-  "loserMistakes": "A 1-2 sentence explanation of the loser's mistakes or inefficiencies.",
-  "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"],
-  "winnerScore": <number between 0 and 100>,
-  "loserScore": <number between 0 and 100>
-}`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json'
-      }
-    });
-
-    const resultText = response.text; // Note: with @google/genai SDK, it's response.text not text()
-    let data;
-    try {
-      data = JSON.parse(resultText);
-    } catch (e) {
-      if (resultText.includes('\`\`\`json')) {
-        const match = resultText.match(/\`\`\`json([\s\S]*?)\`\`\`/);
-        if (match) data = JSON.parse(match[1]);
-      }
-    }
-
-    if (!data) throw new Error("Failed to parse JSON from AI response");
-
-    res.json(data);
-  } catch (err) {
-    console.error('[review] Gemini error:', err?.message);
-    res.json({
-      complexityComparison: 'Optimization failed to analyze.',
-      winnerAdvantage: 'Player completed the challenge successfully.',
-      loserMistakes: 'Opponent was slower to solve.',
-      suggestions: ['Keep practicing data structures', 'Review edge cases', 'Optimize logic'],
-      winnerScore: 100,
-      loserScore: 50
-    });
-  }
->>>>>>> e62a841c6a04d56b4c804bf33d06a2dc6f0c8a25
 });
 
 setupSockets(io);

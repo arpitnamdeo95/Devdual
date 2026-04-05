@@ -1,5 +1,5 @@
 import { AppNavbar, AppSidebar } from '../components/AppLayout';
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { socket } from '../socket';
@@ -57,33 +57,6 @@ export default function BattleArena() {
   const [isFrozen, setIsFrozen] = useState(false);
   const [testcaseDisabled, setTestcaseDisabled] = useState(false);
   const [activePowerupAnim, setActivePowerupAnim] = useState<{type: string, byMe: boolean, userName?: string} | null>(null);
-
-  /* ── AI Coach Review ───────────────────────────────────────── */
-  const [coachSummary, setCoachSummary] = useState<string | null>(null);
-  const [isCoachLoading, setIsCoachLoading] = useState(false);
-
-  const fetchAIReview = async (finalCode: string, pTitle: string) => {
-    setIsCoachLoading(true);
-    try {
-      const res = await fetch(`${import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000'}/api/ai-review`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: finalCode,
-          language,
-          problemTitle: pTitle,
-        }),
-      });
-      const data = await res.json();
-      if (data && !data.error) {
-        setCoachSummary(data.summary);
-      }
-    } catch (e) {
-      console.error('AI Coach fail:', e);
-    }
-    setIsCoachLoading(false);
-  };
-
 
   /* ── emotes / taunts ──────────────────────────────────────── */
   const [activeTaunt, setActiveTaunt] = useState<{emoji: string, byMe: boolean} | null>(null);
@@ -145,10 +118,10 @@ export default function BattleArena() {
 
       /* ── update streak in state + localStorage ── */
       if (won) {
-        setWinStreak(prev => {
+        setWinStreak((prev: number) => {
           const next = prev + 1;
           localStorage.setItem('devdual_win_streak', String(next));
-          setBestStreak(best => {
+          setBestStreak((best: number) => {
             const newBest = Math.max(best, next);
             localStorage.setItem('devdual_best_streak', String(newBest));
             return newBest;
@@ -162,8 +135,8 @@ export default function BattleArena() {
         localStorage.setItem('devdual_win_streak', '0');
       }
 
-      if (data.winnerIdentity && data.loserIdentity) {
-         (conn as any).reducers.endMatch({ 
+      if (won && data.winnerIdentity && data.loserIdentity) {
+         conn.reducers.endMatch({ 
            matchId: actualRoomId.current, 
            codeUpdates: JSON.stringify({ winningCode: data.winningCode, loserCode: data.loserCode }),
            winnerId: data.winnerIdentity, 
@@ -172,16 +145,11 @@ export default function BattleArena() {
 
          setTimeout(() => {
            if (timer >= 28 * 60) {
-              (conn as any).reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'fast_solver' });
+              conn.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'fast_solver' });
            }
-           if (won) {
-              (conn as any).reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'first_win' });
-           }
+           conn.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'first_win' });
          }, 500);
       }
-      
-      /* ── Trigger AI Coach Analysis immediately ── */
-      fetchAIReview(data.winningCode || code, problem?.title || '');
     };
 
     const onPowerupActivated = (data: { type: string, userId: string, userName?: string }) => {
@@ -230,14 +198,14 @@ export default function BattleArena() {
   /* ── search timer ─────────────────────────────────────────── */
   useEffect(() => {
     if (phase !== 'searching') return;
-    const iv = setInterval(() => setSearchSec(s => s + 1), 1000);
+    const iv = setInterval(() => setSearchSec((s: number) => s + 1), 1000);
     return () => clearInterval(iv);
   }, [phase]);
 
   /* ── countdown timer ──────────────────────────────────────── */
   useEffect(() => {
     if (phase !== 'battle') return;
-    const iv = setInterval(() => setTimer(t => (t > 0 ? t - 1 : 0)), 1000);
+    const iv = setInterval(() => setTimer((t: number) => (t > 0 ? t - 1 : 0)), 1000);
     return () => clearInterval(iv);
   }, [phase]);
 
@@ -562,48 +530,8 @@ export default function BattleArena() {
               )}
             </div>
           )}
-          {/* ── AI COACH PREVIEW ── */}
-          <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 text-left relative overflow-hidden group">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">🤖</span>
-              <span className="text-xs font-mono font-bold tracking-[0.2em] text-primary uppercase">AI Coach Insights</span>
-              {isCoachLoading && (
-                <div className="flex gap-1 ml-auto">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                </div>
-              )}
-            </div>
-            
-            {isCoachLoading ? (
-              <p className="text-[11px] font-mono text-on-surface-variant animate-pulse lowercase italic">
-                {'>'} Analyzing code patterns and complexity...
-              </p>
-            ) : coachSummary ? (
-              <div className="space-y-2 animate-in fade-in slide-in-from-bottom-1 duration-500">
-                <p className="text-xs text-on-surface-variant leading-relaxed line-clamp-3">
-                  {coachSummary}
-                </p>
-                <div className="h-[1px] bg-white/5 w-full"></div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-mono text-primary/60 uppercase">Click "AI Coach Review" for full breakdown</span>
-                  <span className="material-symbols-outlined text-sm text-primary animate-pulse">auto_awesome</span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-[11px] font-mono text-on-surface-variant opacity-50 lowercase italic">
-                {'>'} Waiting for analysis to start...
-              </p>
-            )}
-            
-            {/* Gloss effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-          </div>
         </div>
-
         <div className="flex gap-3">
-
           <button
             onClick={() => navigate('/app')}
             className="flex-1 py-3 bg-primary text-on-primary rounded-xl font-bold hover:brightness-110 transition-all"
@@ -876,7 +804,7 @@ export default function BattleArena() {
                 </div>
                 <select
                   value={language}
-                  onChange={(e) => setLanguage(e.target.value as any)}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLanguage(e.target.value as any)}
                   className="bg-transparent border border-white/10 rounded px-1 py-0.5 text-[11px] font-mono text-on-surface-variant outline-none cursor-pointer focus:border-primary/50"
                   title="Select Language"
                 >
@@ -902,7 +830,7 @@ export default function BattleArena() {
                   language={language}
                   theme="vs-dark"
                   value={code}
-                  onChange={(v) => !isFrozen && setCode(v || '')}
+                  onChange={(v: string | undefined) => !isFrozen && setCode(v || '')}
                   options={{
                     readOnly: isFrozen,
                     minimap: { enabled: false },
@@ -962,7 +890,7 @@ export default function BattleArena() {
                 {!isTesting && !isSubmitting && testResults.length === 0 && (
                   <p className="text-on-surface-variant/40">Click "Run Tests" to see output here.</p>
                 )}
-                {testResults.map((r, i) => (
+                {testResults.map((r: any, i: number) => (
                   <div key={i} className={`flex flex-col mb-3 pb-2 border-b border-white/5 ${r.passed ? 'text-emerald-400' : 'text-red-400'}`}>
                     <div className="flex gap-2 items-start">
                       <span className="font-bold shrink-0">[{r.passed ? 'PASS' : 'FAIL'}]</span>
@@ -982,10 +910,10 @@ export default function BattleArena() {
                 ))}
                 {testResults.length > 0 && (
                   <div className={`mt-2 font-bold text-[11px] ${
-                    testResults.every(r => r.passed) ? 'text-emerald-400' : 'text-red-400'
+                    testResults.every((r: any) => r.passed) ? 'text-emerald-400' : 'text-red-400'
                   }`}>
-                    {testResults.filter(r => r.passed).length}/{testResults.length} passed
-                    {testResults.every(r => r.passed) ? ' ✓ Ready to Submit!' : ' — Keep working!'}
+                    {testResults.filter((r: any) => r.passed).length}/{testResults.length} passed
+                    {testResults.every((r: any) => r.passed) ? ' ✓ Ready to Submit!' : ' — Keep working!'}
                   </div>
                 )}
               </div>
