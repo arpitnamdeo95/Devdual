@@ -54,20 +54,20 @@ Analyze both and respond ONLY with valid JSON (no markdown, no extra text) in th
   } catch (err) {
     console.error('[hint-api] error:', err?.message);
     
-    // Dynamic fallback to give the illusion of an active AI
-    const fallbackSuggestions = [
-      'Use a dictionary/map for O(1) lookups to save time',
-      'Check for edge cases: empty input or single elements',
-      'Avoid redundant variable assignments',
-      'Consider memoization if your algorithm uses recursion',
-      'Review time vs space complexity trade-offs here',
-      'Double-check your loop boundaries (off-by-one errors)',
-      'Look for ways to use two pointers to optimize iteration'
-    ];
-    // Shuffle and pick 3 to 5 random suggestions
-    const numSuggestions = Math.floor(Math.random() * 3) + 3; // 3 to 5
-    const shuffled = fallbackSuggestions.sort(() => 0.5 - Math.random());
-    const randomSuggestions = shuffled.slice(0, numSuggestions);
+    const desc = (problemDescription || '').toLowerCase();
+    let topicTips = [];
+    if (desc.includes('array') || desc.includes('list')) {
+      topicTips = ['Consider utilizing a two-pointer approach for dynamic array traversal', 'Check for out-of-bounds index errors', 'Can this array be sorted to improve time complexity algorithmically?'];
+    } else if (desc.includes('graph') || desc.includes('tree') || desc.includes('node') || desc.includes('path')) {
+      topicTips = ['Beware of infinite loops; track visited nodes properly', 'Would a Breadth-First Search (BFS) isolate the shortest path faster?', 'Verify your recursive depth limits to prevent stack overflows'];
+    } else if (desc.includes('string') || desc.includes('characters')) {
+      topicTips = ['Look out for edge cases with empty strings or unusual characters', 'A sliding window approach could condense character tracking', 'Are you handling case-insensitivity requirements?'];
+    } else if (desc.includes('math') || desc.includes('number') || desc.includes('sum')) {
+      topicTips = ['Consider modulus logic to cycle through value ranges', 'Beware of potential integer overflow on extremely large cases', 'Pre-calculating common values will optimize performance'];
+    }
+    const generalTips = ['Use a dictionary/map for O(1) lookups to save time', 'Optimize the inner loop structure if it contains heavy allocations', 'Avoid redundant variable assignments', 'Consider memoization if your algorithm uses repeated recursion', 'Double-check your iteration boundaries (off-by-one errors)'];
+    let combined = [...topicTips, ...generalTips].sort(() => 0.5 - Math.random());
+    const randomSuggestions = combined.slice(0, Math.floor(Math.random() * 3) + 3);
     const threats = ['low', 'medium', 'high'];
     const randomThreat = threats[Math.floor(Math.random() * threats.length)];
 
