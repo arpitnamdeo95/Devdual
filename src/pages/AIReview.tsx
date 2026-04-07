@@ -6,6 +6,7 @@ import {
   Brain, ArrowLeft, Cpu, Zap, BarChart3, TrendingUp,
   AlertTriangle, CheckCircle2, Code2, Lightbulb, Download, Target, Activity
 } from 'lucide-react';
+import { getTopicAwareReviewFallback } from '../data/aiFallbacks';
 
 const loadingMessages = [
   'Initializing neural analysis...',
@@ -92,14 +93,11 @@ export default function AIReview() {
     })
     .catch(err => {
       console.error(err);
-      setReview({ 
-        error: "Failed to fetch AI analysis.",
-        complexityComparison: "Unable to compare results.",
-        winnerAdvantage: "Player showed superior logic speed.",
-        loserMistakes: "Slower algorithmic conversion identified.",
-        suggestions: ["Focus on reducing nested loops", "Consider built-in sorting methods"],
-        winnerScore: 85,
-        loserScore: 62
+      const won = parsed.winnerCode === parsed.loserCode; // simplified check
+      const fallback = getTopicAwareReviewFallback(parsed.problemDescription || '', won);
+      setReview({
+        ...fallback,
+        error: "Note: Used fallback AI engine."
       });
       setLoading(false);
     });

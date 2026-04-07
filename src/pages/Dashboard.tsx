@@ -7,9 +7,11 @@ export default function Dashboard() {
   const localIdentity = localStorage.getItem('devduel_user_identity') || '';
 
   const stats = useSupabaseData(state => state.gameStats);
+  const players = useSupabaseData(state => state.players);
+  const me = players.find((p: any) => p.username === localIdentity);
   const myMatches = useSupabaseData(state => 
     [...state.matches]
-      .filter(m => m.winner_id === localIdentity || m.loser_id === localIdentity)
+      .filter(m => m.winner_id === me?.id || m.loser_id === me?.id)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   );
 
@@ -105,7 +107,10 @@ export default function Dashboard() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {myMatches.slice(0, 4).map(match => {
-                  const won = match.winner_id === localIdentity;
+                  const won = match.winner_id === me?.id;
+                  const opponentPlayer = players.find((p: any) => p.id === (won ? match.loser_id : match.winner_id));
+                  const opponentName = opponentPlayer?.username || 'Opponent';
+                  
                   return (
                     <div 
                       key={match.id}
@@ -120,7 +125,7 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <div className={`font-black text-lg ${won ? 'text-tertiary' : 'text-error'}`}>{won ? 'VICTORY' : 'DEFEAT'}</div>
-                          <div className="text-[11px] font-mono text-on-surface-variant">vs {won ? match.loser_id.split('_')[0] : match.winner_id.split('_')[0]}</div>
+                          <div className="text-[11px] font-mono text-on-surface-variant">vs {opponentName}</div>
                         </div>
                       </div>
                       <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>

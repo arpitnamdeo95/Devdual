@@ -7,17 +7,20 @@ interface GlobalState {
   badges: any[];
   playerBadges: any[];
   gameStats: any[];
+  inventory: any[];
 }
 
 const SupabaseContext = createContext<GlobalState | null>(null);
 
 export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('DEBUG: SupabaseProvider rendering');
   const [state, setState] = useState<GlobalState>({
     players: [],
     matches: [],
     badges: [],
     playerBadges: [],
     gameStats: [],
+    inventory: [],
   });
   const [isConnected, setIsConnected] = useState(false);
 
@@ -34,13 +37,15 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         { data: matches },
         { data: badges },
         { data: playerBadges },
-        { data: gameStats }
+        { data: gameStats },
+        { data: inventory }
       ] = await Promise.all([
         supabase.from('dd_players').select('*'),
         supabase.from('dd_matches').select('*'),
         supabase.from('dd_badges').select('*'),
         supabase.from('dd_player_badges').select('*'),
-        supabase.from('dd_game_stats').select('*')
+        supabase.from('dd_game_stats').select('*'),
+        supabase.from('dd_inventory').select('*')
       ]);
 
       setState({
@@ -49,6 +54,7 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         badges: badges || [],
         playerBadges: playerBadges || [],
         gameStats: gameStats || [],
+        inventory: inventory || [],
       });
       setIsConnected(true);
 
@@ -79,6 +85,9 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'dd_game_stats' }, () => {
         supabase.from('dd_game_stats').select('*').then(({ data }: any) => setState(s => ({ ...s, gameStats: data || [] })));
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dd_inventory' }, () => {
+        supabase.from('dd_inventory').select('*').then(({ data }: any) => setState(s => ({ ...s, inventory: data || [] })));
       })
       .subscribe();
 

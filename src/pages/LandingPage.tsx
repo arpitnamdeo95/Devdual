@@ -25,11 +25,11 @@ export default function LandingPage() {
 <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>terminal</span>
                     DEVDUEL
                 </div>
-<div className="hidden md:flex gap-6 font-['Inter'] font-medium text-sm tracking-tight">
-<button onClick={() => navigate('/arena/demo')} className="text-[#adc6ff] border-b-2 border-[#adc6ff] pb-1 cursor-pointer transition-transform active:scale-95">Arena</button>
-<button onClick={() => navigate('/watch/demo')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Rankings</button>
-<button onClick={() => navigate('/docs')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Docs</button>
-<button onClick={() => navigate('/app')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Compete</button>
+<div className="hidden md:flex gap-6 font-['Inter'] font-medium text-sm tracking-tight items-center">
+<button onClick={() => navigate('/arena/matchmaking')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Arena</button>
+<button onClick={() => navigate('/leaderboard')} className="text-[#e5e2e1]/60 hover:text-[#adc6ff] transition-colors duration-200 cursor-pointer active:scale-95">Rankings</button>
+<button onClick={() => navigate('/login')} className="text-[#adc6ff] hover:text-[#fff] transition-colors duration-200 cursor-pointer active:scale-95">Login</button>
+<button onClick={() => navigate('/signup')} className="text-on-primary bg-primary px-4 py-1.5 rounded text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all active:scale-95">Sign Up</button>
 </div>
 </div>
 

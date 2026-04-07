@@ -7,6 +7,8 @@ import { supabase } from '../supabaseClient';
 import QuestionSelector from '../components/QuestionSelector';
 import { useSupabaseData } from '../supabaseProvider';
 import { Brain, Zap, AlertTriangle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import type { CoachHint } from '../data/aiFallbacks';
+import { getTopicAwareFallback } from '../data/aiFallbacks';
 
 /* ─────────────────────────────────────────────── helpers ─── */
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -40,8 +42,8 @@ export default function BattleArena() {
   const [gameResult, setGameResult]     = useState<{won:boolean;message:string}|null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const authPlayer = useSupabaseData(state => state.authPlayer);
   const players = useSupabaseData(state => state.players);
+  const authPlayer = players.find((p: any) => p.username === localStorage.getItem('devduel_user_identity'));
   
   const myName = useRef(localStorage.getItem('devduel_user_identity') || `Player_${Math.floor(Math.random() * 9000) + 1000}`);
   
@@ -54,17 +56,7 @@ export default function BattleArena() {
   }, [authPlayer]);
 
   /* ── AI Coach state ───────────────────────────────────────── */
-  interface CoachHint {
-    opponentApproach: string;
-    myApproach: string;
-    keyDifference: string;
-    urgentTip: string;
-    suggestions: string[];
-    opponentLeading: boolean;
-    threatLevel: 'low' | 'medium' | 'high';
-    suggestedPowerup?: 'freeze' | 'testcase' | 'blur' | null;
-    powerupReason?: string;
-  }
+  // interface CoachHint moved to aiFallbacks.ts
   const [coachHint, setCoachHint] = useState<CoachHint | null>(null);
   const [coachLoading, setCoachLoading] = useState(false);
   const [coachOpen, setCoachOpen] = useState(true);
@@ -155,12 +147,11 @@ export default function BattleArena() {
               });
               
               // Increment wins for winner, losses for loser in dd_players
-              await supabase.rpc('update_match_stats', { winner_id: winnerPlayer.id, loser_id: loserPlayer.id });
-              
-              if (timer >= 28 * 60) {
-                 await supabase.from('dd_player_badges').insert({ player_id: winnerPlayer.id, badge_id: 'fast_solver' });
-              }
-              await supabase.from('dd_player_badges').insert({ player_id: winnerPlayer.id, badge_id: 'first_win' });
+              await supabase.rpc('update_match_stats', { 
+                winner_id: winnerPlayer.id, 
+                loser_id: loserPlayer.id,
+                duration_sec: 1800 - timer 
+              });
             }
           } catch (err) {
             console.error('Failed to save match to Supabase:', err);
@@ -333,18 +324,20 @@ export default function BattleArena() {
         })
       });
       const data = await res.json();
-      setCoachHint(data);
-      // If AI suggests a powerup, trigger the ambient overlay
-      if (data.suggestedPowerup && data.powerupReason) {
-        if (powerupSuggestionTimerRef.current) clearTimeout(powerupSuggestionTimerRef.current);
-        setPowerupSuggestionAnim({ type: data.suggestedPowerup, reason: data.powerupReason });
-        powerupSuggestionTimerRef.current = setTimeout(() => setPowerupSuggestionAnim(null), 7000);
+        setCoachHint(data);
+        // If AI suggests a powerup, trigger the ambient overlay
+        if (data.suggestedPowerup && data.powerupReason) {
+          if (powerupSuggestionTimerRef.current) clearTimeout(powerupSuggestionTimerRef.current);
+          setPowerupSuggestionAnim({ type: data.suggestedPowerup, reason: data.powerupReason });
+          powerupSuggestionTimerRef.current = setTimeout(() => setPowerupSuggestionAnim(null), 7000);
+        }
+      } catch (e) {
+        // dynamic fallback mechanism
+        const fallback = getTopicAwareFallback(problem?.description || '');
+        setCoachHint(fallback);
       }
-    } catch (e) {
-      // silently fail — don't disrupt gameplay
-    }
-    setCoachLoading(false);
-  }, [phase, opponentCode, code, problem]);
+      setCoachLoading(false);
+    }, [phase, opponentCode, code, problem]);
 
   /* ── AI Coach: poll every 30s during battle ───────────────── */
   useEffect(() => {
@@ -1061,11 +1054,17 @@ export default function BattleArena() {
                           </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                           {coachHint.suggestions?.slice(0, 5).map((s, i) => (
-                             <div key={i} className="flex gap-2 items-center p-2 rounded-md bg-black/40 border border-white/5">
-                               <div className="w-0.5 h-3 bg-primary/40 rounded-full shrink-0" />
-                               <p className="text-[9.5px] text-zinc-500 font-medium leading-snug">{s}</p>
+                        <div className="space-y-2">
+                           {(coachHint.suggestions || []).slice(0, 5).map((s, i) => (
+                             <div 
+                               key={i} 
+                               className="flex gap-3 items-start p-2.5 rounded-lg bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-all group/tip"
+                               style={{ animationDelay: `${i * 0.1}s` }}
+                             >
+                               <div className="mt-1 w-1 h-1 rounded-full bg-[#a78bfa] group-hover/tip:scale-125 transition-transform shrink-0" />
+                               <p className="text-[10px] text-zinc-400 font-medium leading-snug group-hover/tip:text-zinc-200 transition-colors">
+                                 {s}
+                               </p>
                              </div>
                            ))}
                         </div>
