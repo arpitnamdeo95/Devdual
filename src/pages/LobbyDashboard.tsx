@@ -12,26 +12,25 @@ import {
   Activity, Clock, Shield, Sparkles, Loader
 } from 'lucide-react';
 
-const leaderboardData = [
-  { rank: 1, name: 'ZER0_DAY', elo: 2840, trend: 'up', wins: 142, streak: 7 },
-  { rank: 2, name: 'ALGO_GOD', elo: 2815, trend: 'up', wins: 138, streak: 4 },
-  { rank: 3, name: 'SYS_ADMIN', elo: 2790, trend: 'same', wins: 135, streak: 0 },
-  { rank: 4, name: 'NEURO_LINK', elo: 2765, trend: 'down', wins: 130, streak: 0 },
-  { rank: 5, name: 'GHOST_NET', elo: 2730, trend: 'up', wins: 128, streak: 3 },
-];
-
-const recentMatches = [
-  { p1: 'BYTE_ME', p2: 'NULL_POINTER', winner: 'BYTE_ME', time: '2m ago' },
-  { p1: 'CODE_MASTER', p2: 'DARK_NET', winner: 'DARK_NET', time: '5m ago' },
-  { p1: 'HACKERMAN', p2: 'SYNTAX_ERROR', winner: 'HACKERMAN', time: '8m ago' },
-];
+import { useSupabaseData } from '../supabaseProvider';
 
 export default function LobbyDashboard() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchTime, setSearchTime] = useState(0);
-  const [queueCount] = useState(() => Math.floor(Math.random() * 50) + 100);
-  const [activeTab, setActiveTab] = useState<'leaderboard' | 'recent'>('leaderboard');
   const navigate = useNavigate();
+  const localIdentity = localStorage.getItem('devduel_user_identity') || '';
+
+  const me = useSupabaseData(state => state.players.find(p => p.username === localIdentity));
+  const allPlayers = useSupabaseData(state => [...state.players].sort((a,b) => b.elo - a.elo));
+  const myMatches = useSupabaseData(state => 
+    state.matches.filter(m => m.winner_id === localIdentity || m.loser_id === localIdentity)
+      .sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  );
+  
+  const myRank = allPlayers.findIndex(p => p.username === localIdentity) + 1;
+  const totalPlayers = allPlayers.length;
+  const topPercent = totalPlayers ? Math.round((myRank / totalPlayers) * 100) : 100;
+  const winRate = me?.matches_played ? Math.round((me.wins / me.matches_played) * 100) : 0;
 
   useEffect(() => {
     socket.on('match-found', (data: { roomId: string; opponent: unknown }) => {
@@ -91,37 +90,46 @@ export default function LobbyDashboard() {
 
 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
-<div className="col-span-1 md:col-span-2 bg-surface-container-low rounded-xl p-6 relative overflow-hidden group">
+<div className="col-span-1 md:col-span-2 glass-panel border-glow-cyan rounded-xl p-6 relative overflow-hidden group">
 <div className="relative z-10">
 <span className="text-xs font-mono tracking-widest text-on-surface-variant uppercase">Current Rating</span>
 <div className="flex items-baseline gap-3 mt-2">
-<span className="text-5xl font-black text-primary tracking-tighter">2,842</span>
-<span className="text-tertiary font-mono text-sm font-bold">+142 pts</span>
+<span className="text-5xl font-black text-white neon-cyan tracking-tighter glitch" data-text={me?.elo || 1000}>{me?.elo || 1000}</span>
+<span className="text-primary font-mono text-sm font-bold">{me?.wins || 0} Wins</span>
 </div>
 </div>
 
-<div className="absolute bottom-0 right-0 left-0 h-24 opacity-20 pointer-events-none">
+<div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+  <span className="material-symbols-outlined text-8xl text-primary transform rotate-12">swords</span>
+</div>
+
+<div className="absolute bottom-0 right-0 left-0 h-24 opacity-30 pointer-events-none mix-blend-screen">
 <svg className="w-full h-full preserve-3d" viewBox="0 0 400 100">
-<path className="text-primary" d="M0,80 Q50,75 100,60 T200,50 T300,20 T400,10" fill="none" stroke="currentColor" strokeWidth="4"></path>
+<path className="text-primary drop-shadow-[0_0_8px_rgba(0,229,255,0.8)]" d="M0,80 Q50,75 100,60 T200,50 T300,20 T400,10" fill="none" stroke="currentColor" strokeWidth="2"></path>
+<path className="text-primary/20 blur-sm flex" d="M0,80 Q50,75 100,60 T200,50 T300,20 T400,10" fill="none" stroke="currentColor" strokeWidth="6"></path>
+<path className="text-primary/10 blur-md flex" d="M0,80 Q50,75 100,60 T200,50 T300,20 T400,10" fill="none" stroke="currentColor" strokeWidth="12"></path>
 </svg>
 </div>
 </div>
 
-<div className="bg-surface-container-low rounded-xl p-6 flex flex-col justify-between">
-<span className="text-xs font-mono tracking-widest text-on-surface-variant uppercase">Win Rate</span>
-<div>
-<span className="text-4xl font-bold text-on-surface">68.4%</span>
-<div className="w-full h-1.5 bg-surface-container-highest mt-4 rounded-full overflow-hidden">
-<div className="w-[68.4%] h-full bg-tertiary"></div>
+<div className="glass-panel border-glow-purple rounded-xl p-6 flex flex-col justify-between group">
+<div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-20 transition-opacity text-tertiary">
+  <span className="material-symbols-outlined text-6xl">emoji_events</span>
+</div>
+<span className="text-xs font-mono tracking-widest text-on-surface-variant uppercase relative z-10">Win Rate</span>
+<div className="relative z-10">
+<span className="text-4xl font-bold text-white neon-purple">{winRate}%</span>
+<div className="w-full h-1.5 bg-surface-container-highest mt-4 rounded-full overflow-hidden shadow-glow-ambient">
+<div className="h-full bg-tertiary shadow-glow-purple" style={{width: `${winRate}%`}}></div>
 </div>
 </div>
 </div>
 
-<div className="bg-surface-container-low rounded-xl p-6 flex flex-col justify-between">
-<span className="text-xs font-mono tracking-widest text-on-surface-variant uppercase">Global Rank</span>
-<div>
-<span className="text-4xl font-bold text-on-surface">#1,042</span>
-<p className="text-on-surface-variant text-xs mt-2 font-medium">Top 2.1% Worldwide</p>
+<div className="glass-panel border-l-2 border-primary rounded-xl p-6 flex flex-col justify-between scanline-overlay">
+<span className="text-xs font-mono tracking-widest text-on-surface-variant uppercase z-20">Global Rank</span>
+<div className="z-20">
+<span className="text-4xl font-bold text-white neon-cyan">#{myRank || '?'}</span>
+<p className="text-on-surface-variant text-xs mt-2 font-medium bg-surface-container/50 inline-block px-2 py-1 rounded">Top {topPercent}% Worldwide</p>
 </div>
 </div>
 </div>
@@ -161,8 +169,8 @@ export default function LobbyDashboard() {
 <circle cx="800" cy="40" fill="#131313" r="5" stroke="#adc6ff" strokeWidth="2"></circle>
 </svg>
 <div className="absolute top-0 left-[80%] -translate-x-1/2 p-2 glass-panel border border-outline-variant/20 rounded shadow-xl pointer-events-none">
-<p className="text-[10px] font-mono text-primary font-bold">2,842 ELO</p>
-<p className="text-[8px] text-on-surface-variant uppercase">Match ID #4421</p>
+<p className="text-[10px] font-mono text-primary font-bold">{me?.elo || 1000} ELO</p>
+<p className="text-[8px] text-on-surface-variant uppercase">{me?.username || 'GUEST'}</p>
 </div>
 </div>
 <div className="flex justify-between mt-6 px-2">
@@ -173,62 +181,74 @@ export default function LobbyDashboard() {
 </div>
 </div>
 
-<div className="bg-surface-container rounded-xl p-8">
+<div className="bg-surface-container rounded-xl p-8 relative overflow-hidden">
 <h3 className="text-lg font-bold tracking-tight text-on-surface mb-6 uppercase">Skill_Distribution</h3>
-<div className="space-y-5">
+
+{myMatches.length < 5 ? (
+  <div className="absolute inset-0 bg-surface-container/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center p-6 border border-outline-variant/10 rounded-xl">
+    <div className="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center mb-4">
+      <span className="material-symbols-outlined">lock</span>
+    </div>
+    <h4 className="text-on-surface font-bold mb-2 uppercase">Insufficient Data</h4>
+    <p className="text-xs text-on-surface-variant font-mono">Complete {5 - myMatches.length} more ranked matches to calibrate your skill signature.</p>
+  </div>
+) : null}
+
+<div className={`space-y-5 transition-opacity ${myMatches.length < 5 ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
 <div className="space-y-2">
 <div className="flex justify-between text-xs font-mono uppercase">
 <span className="text-on-surface">Data Structures</span>
-<span className="text-primary">94%</span>
+<span className="text-primary">{myMatches.length < 5 ? '??' : '94'}%</span>
 </div>
 <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
-<div className="w-[94%] h-full bg-primary"></div>
+<div className="h-full bg-primary" style={{width: `${myMatches.length < 5 ? 0 : 94}%`}}></div>
 </div>
 </div>
 <div className="space-y-2">
 <div className="flex justify-between text-xs font-mono uppercase">
 <span className="text-on-surface">Algorithms</span>
-<span className="text-primary">82%</span>
+<span className="text-primary">{myMatches.length < 5 ? '??' : '82'}%</span>
 </div>
 <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
-<div className="w-[82%] h-full bg-primary"></div>
+<div className="h-full bg-primary" style={{width: `${myMatches.length < 5 ? 0 : 82}%`}}></div>
 </div>
 </div>
 <div className="space-y-2">
 <div className="flex justify-between text-xs font-mono uppercase">
 <span className="text-on-surface">System Design</span>
-<span className="text-primary">65%</span>
+<span className="text-primary">{myMatches.length < 5 ? '??' : '65'}%</span>
 </div>
 <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
-<div className="w-[65%] h-full bg-primary"></div>
+<div className="h-full bg-primary" style={{width: `${myMatches.length < 5 ? 0 : 65}%`}}></div>
 </div>
 </div>
 <div className="space-y-2">
 <div className="flex justify-between text-xs font-mono uppercase">
 <span className="text-on-surface">Concurrency</span>
-<span className="text-primary">48%</span>
+<span className="text-primary">{myMatches.length < 5 ? '??' : '48'}%</span>
 </div>
 <div className="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden">
-<div className="w-[48%] h-full bg-primary"></div>
+<div className="h-full bg-primary" style={{width: `${myMatches.length < 5 ? 0 : 48}%`}}></div>
 </div>
 </div>
 </div>
-<div className="mt-8 pt-6 border-t border-outline-variant/10">
+<div className={`mt-8 pt-6 border-t border-outline-variant/10 transition-opacity ${myMatches.length < 5 ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
 <h4 className="text-[10px] font-mono text-on-surface-variant uppercase tracking-widest mb-4">Preferred_Stack</h4>
 <div className="flex flex-wrap gap-2">
 <span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-mono text-on-surface border border-outline-variant/10">Rust</span>
 <span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-mono text-on-surface border border-outline-variant/10">TypeScript</span>
-<span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-mono text-on-surface border border-outline-variant/10">Python</span>
-<span className="px-2 py-1 bg-surface-container-high rounded text-[10px] font-mono text-on-surface border border-outline-variant/10">Go</span>
 </div>
 </div>
 </div>
 </div>
 
-<section className="bg-surface-container rounded-xl overflow-hidden">
-<div className="p-6 border-b border-outline-variant/10 flex justify-between items-center">
-<h3 className="text-lg font-bold tracking-tight text-on-surface uppercase">Recent_Battles</h3>
-<button className="text-primary text-xs font-bold hover:underline">VIEW_ALL_HISTORY</button>
+<section className="glass-panel border-l-2 border-primary rounded-xl overflow-hidden mt-8 shadow-glow-intense">
+<div className="p-6 border-b border-outline-variant/20 flex justify-between items-center bg-gradient-to-r from-primary/10 to-transparent">
+<h3 className="text-lg font-bold tracking-tight text-white uppercase flex items-center gap-2">
+  <span className="material-symbols-outlined text-primary">history</span>
+  Recent_Battles
+</h3>
+<button className="text-primary text-xs font-bold hover:underline glitch" data-text="VIEW_ALL_HISTORY">VIEW_ALL_HISTORY</button>
 </div>
 <div className="overflow-x-auto">
 <table className="w-full text-left border-collapse">
@@ -243,66 +263,35 @@ export default function LobbyDashboard() {
 </tr>
 </thead>
 <tbody className="divide-y divide-outline-variant/10">
-<tr className="hover:bg-surface-container-high transition-colors cursor-pointer group">
+{myMatches.slice(0, 4).map(match => {
+  const won = match.winner_id === localIdentity;
+  return (
+<tr key={match.id} className="hover:bg-surface-container-high transition-colors cursor-pointer group" onClick={() => navigate(`/review/${match.id}`)}>
 <td className="px-6 py-4">
 <div className="flex items-center gap-2">
-<span className="w-2 h-2 rounded-full bg-tertiary"></span>
-<span className="text-tertiary font-bold text-xs">WIN</span>
+<span className={`w-2 h-2 rounded-full ${won ? 'bg-tertiary' : 'bg-error'}`}></span>
+<span className={`${won ? 'text-tertiary' : 'text-error'} font-bold text-xs`}>{won ? 'WIN' : 'LOSS'}</span>
 </div>
 </td>
-<td className="px-6 py-4 font-mono text-sm text-on-surface">Red_Black_Tree_Rebalancing</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface">{match.problem_title || 'Unknown'}</td>
 <td className="px-6 py-4">
-<span className="px-2 py-0.5 rounded bg-error/10 text-error text-[10px] font-bold uppercase">Hard</span>
+<span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+  match.difficulty === 'easy' ? 'bg-tertiary/10 text-tertiary' : match.difficulty === 'medium' ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'
+}`}>{match.difficulty || 'Medium'}</span>
 </td>
-<td className="px-6 py-4 font-mono text-sm text-tertiary">+24</td>
-<td className="px-6 py-4 font-mono text-sm text-on-surface-variant">14:42</td>
-<td className="px-6 py-4 text-right font-mono text-xs text-on-surface-variant">2023-10-31</td>
+<td className={`px-6 py-4 font-mono text-sm ${won ? 'text-tertiary' : 'text-error'}`}>
+  {won ? '+' : ''}{won ? match.winner_elo_change : match.loser_elo_change}
+</td>
+<td className="px-6 py-4 font-mono text-sm text-on-surface-variant">{Math.floor((match.duration_sec||0)/60)}:{(match.duration_sec||0)%60 < 10 ? '0': ''}{(match.duration_sec||0)%60}</td>
+<td className="px-6 py-4 text-right font-mono text-xs text-on-surface-variant">{new Date(match.created_at).toISOString().split('T')[0]}</td>
 </tr>
-<tr className="hover:bg-surface-container-high transition-colors cursor-pointer group">
-<td className="px-6 py-4">
-<div className="flex items-center gap-2">
-<span className="w-2 h-2 rounded-full bg-tertiary"></span>
-<span className="text-tertiary font-bold text-xs">WIN</span>
-</div>
-</td>
-<td className="px-6 py-4 font-mono text-sm text-on-surface">Fast_Fourier_Transform_Impl</td>
-<td className="px-6 py-4">
-<span className="px-2 py-0.5 rounded bg-error/10 text-error text-[10px] font-bold uppercase">Hard</span>
-</td>
-<td className="px-6 py-4 font-mono text-sm text-tertiary">+18</td>
-<td className="px-6 py-4 font-mono text-sm text-on-surface-variant">22:01</td>
-<td className="px-6 py-4 text-right font-mono text-xs text-on-surface-variant">2023-10-30</td>
-</tr>
-<tr className="hover:bg-surface-container-high transition-colors cursor-pointer group">
-<td className="px-6 py-4">
-<div className="flex items-center gap-2">
-<span className="w-2 h-2 rounded-full bg-surface-variant"></span>
-<span className="text-on-surface-variant font-bold text-xs">LOSS</span>
-</div>
-</td>
-<td className="px-6 py-4 font-mono text-sm text-on-surface">LRU_Cache_Design</td>
-<td className="px-6 py-4">
-<span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase">Medium</span>
-</td>
-<td className="px-6 py-4 font-mono text-sm text-error">-12</td>
-<td className="px-6 py-4 font-mono text-sm text-on-surface-variant">08:15</td>
-<td className="px-6 py-4 text-right font-mono text-xs text-on-surface-variant">2023-10-29</td>
-</tr>
-<tr className="hover:bg-surface-container-high transition-colors cursor-pointer group">
-<td className="px-6 py-4">
-<div className="flex items-center gap-2">
-<span className="w-2 h-2 rounded-full bg-tertiary"></span>
-<span className="text-tertiary font-bold text-xs">WIN</span>
-</div>
-</td>
-<td className="px-6 py-4 font-mono text-sm text-on-surface">Async_Task_Scheduler</td>
-<td className="px-6 py-4">
-<span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold uppercase">Medium</span>
-</td>
-<td className="px-6 py-4 font-mono text-sm text-tertiary">+12</td>
-<td className="px-6 py-4 font-mono text-sm text-on-surface-variant">10:30</td>
-<td className="px-6 py-4 text-right font-mono text-xs text-on-surface-variant">2023-10-28</td>
-</tr>
+  );
+})}
+{myMatches.length === 0 && (
+  <tr>
+    <td colSpan={6} className="px-6 py-8 text-center text-on-surface-variant font-mono text-sm">No recent matches found.</td>
+  </tr>
+)}
 </tbody>
 </table>
 </div>

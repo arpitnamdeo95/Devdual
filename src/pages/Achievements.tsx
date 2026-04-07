@@ -1,5 +1,5 @@
 import { AppSidebar, AppNavbar } from '../components/AppLayout';
-import { useSpacetimeData } from '../spacetimeProvider';
+import { useSupabaseData } from '../supabaseProvider';
 import { useEffect, useState, useRef } from 'react';
 import { socket } from '../socket';
 
@@ -32,12 +32,13 @@ interface ToastData { id: number; badge: { name: string; id: string } }
 export default function Achievements() {
   const localIdentity = localStorage.getItem('devduel_user_identity') || '';
 
-  const badges   = useSpacetimeData(db => Array.from(db.badge.iter()));
-  const myBadges = useSpacetimeData(db =>
-    Array.from(db.userBadge.iter()).filter(b => b.userIdentity === localIdentity)
+  const me = useSupabaseData(state => state.players.find(p => p.username === localIdentity));
+  const badges = useSupabaseData(state => state.badges);
+  const myBadges = useSupabaseData(state =>
+    state.playerBadges.filter(b => b.player_id === me?.id)
   );
 
-  const ownedBadgeIds = new Set(myBadges.map(b => b.badgeId));
+  const ownedBadgeIds = new Set(myBadges.map(b => b.badge_id));
   const prevOwnedRef  = useRef<Set<string>>(new Set());
 
   /* ── Track newly awarded badges and fire toasts ── */

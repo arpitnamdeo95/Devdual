@@ -1,16 +1,16 @@
 import { AppSidebar, AppNavbar } from '../components/AppLayout';
-import { useSpacetimeData } from '../spacetimeProvider';
+import { useSupabaseData } from '../supabaseProvider';
 import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const localIdentity = localStorage.getItem('devduel_user_identity') || '';
 
-  const stats = useSpacetimeData(db => Array.from(db.gameStat.iter()));
-  const myMatches = useSpacetimeData(db => 
-    Array.from(db.matchLog.iter())
-      .filter(m => m.winnerId === localIdentity || m.loserId === localIdentity)
-      .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+  const stats = useSupabaseData(state => state.gameStats);
+  const myMatches = useSupabaseData(state => 
+    [...state.matches]
+      .filter(m => m.winner_id === localIdentity || m.loser_id === localIdentity)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   );
 
   const demoData: Record<string, string> = {
@@ -19,7 +19,7 @@ export default function Dashboard() {
     'total_matches_played': '9',
     'average_match_time': '8'
   };
-  const getStat = (id: string) => stats.find(s => s.statId === id)?.value || demoData[id] || '0';
+  const getStat = (id: string) => stats.find(s => s.stat_id === id)?.value || demoData[id] || '0';
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-body">
@@ -105,11 +105,11 @@ export default function Dashboard() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {myMatches.slice(0, 4).map(match => {
-                  const won = match.winnerId === localIdentity;
+                  const won = match.winner_id === localIdentity;
                   return (
                     <div 
-                      key={match.matchId}
-                      onClick={() => navigate(`/review/${match.matchId}`)}
+                      key={match.id}
+                      onClick={() => navigate(`/review/${match.id}`)}
                       className={`p-4 rounded-xl border cursor-pointer hover:-translate-y-1 transition-all flex justify-between items-center ${
                         won ? 'bg-tertiary/10 border-tertiary/20 hover:border-tertiary/50' : 'bg-error/10 border-error/20 hover:border-error/50'
                       }`}
@@ -120,7 +120,7 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <div className={`font-black text-lg ${won ? 'text-tertiary' : 'text-error'}`}>{won ? 'VICTORY' : 'DEFEAT'}</div>
-                          <div className="text-[11px] font-mono text-on-surface-variant">vs {won ? match.loserId.split('_')[0] : match.winnerId.split('_')[0]}</div>
+                          <div className="text-[11px] font-mono text-on-surface-variant">vs {won ? match.loser_id.split('_')[0] : match.winner_id.split('_')[0]}</div>
                         </div>
                       </div>
                       <span className="material-symbols-outlined text-on-surface-variant">chevron_right</span>

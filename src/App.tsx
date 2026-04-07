@@ -8,7 +8,7 @@ import UserProfile from './pages/UserProfile';
 import Marketplace from './pages/Marketplace';
 import HypergraphArena from './pages/HypergraphArena';
 import { Documentation, PrivacyPolicy, TermsOfService, Resources } from './components/ContentPages';
-import { SpacetimeDBProvider } from './spacetimeProvider';
+import { SupabaseProvider } from './supabaseProvider';
 import Achievements from './pages/Achievements';
 import Dashboard from './pages/Dashboard';
 import MatchHistory from './pages/MatchHistory';
@@ -19,7 +19,7 @@ import LiveMatches from './pages/LiveMatches';
 
 function App() {
   return (
-    <SpacetimeDBProvider>
+    <SupabaseProvider>
       <Router>
         <div className="min-h-screen bg-[#0A0A0A] text-[#e5e2e1] selection:bg-[#00F2FF] selection:text-[#002022]">
           <Routes>
@@ -52,7 +52,7 @@ function App() {
           </Routes>
         </div>
       </Router>
-    </SpacetimeDBProvider>
+    </SupabaseProvider>
   );
 }
 

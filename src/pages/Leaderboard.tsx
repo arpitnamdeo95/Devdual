@@ -1,5 +1,5 @@
 import { AppSidebar, AppNavbar } from '../components/AppLayout';
-import { useSpacetimeData } from '../spacetimeProvider';
+import { useSupabaseData } from '../supabaseProvider';
 import { useState, useEffect } from 'react';
 import { socket } from '../socket';
 import { TrendingUp, TrendingDown, Minus, Zap, Search } from 'lucide-react';
@@ -44,8 +44,8 @@ export default function Leaderboard() {
   const localIdentity = localStorage.getItem('devduel_user_identity') || '';
 
   /* SpacetimeDB data */
-  const rawEntries = useSpacetimeData(db =>
-    Array.from(db.leaderboardEntry.iter()).sort((a, b) => b.elo - a.elo)
+  const rawEntries = useSupabaseData(state =>
+    [...state.players].sort((a, b) => b.elo - a.elo)
   );
 
   /* Local state so we can animate changes */
@@ -60,11 +60,11 @@ export default function Leaderboard() {
     setEntries(prev => {
       const prevMap = new Map((prev as LiveEntry[]).map(e => [e.userIdentity, e.elo]));
       return rawEntries.map(e => ({
-        userIdentity: e.userIdentity,
+        userIdentity: e.username,
         username: e.username,
-        elo: e.elo,
-        delta: prevMap.has(e.userIdentity) ? e.elo - (prevMap.get(e.userIdentity) ?? e.elo) : 0,
-        flash: prevMap.has(e.userIdentity) && prevMap.get(e.userIdentity) !== e.elo,
+        elo: e.elo || 1000,
+        delta: prevMap.has(e.username) ? (e.elo || 1000) - (prevMap.get(e.username) ?? (e.elo || 1000)) : 0,
+        flash: prevMap.has(e.username) && prevMap.get(e.username) !== (e.elo || 1000),
       }));
     });
   }, [rawEntries]);

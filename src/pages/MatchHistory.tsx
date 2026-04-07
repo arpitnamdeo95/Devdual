@@ -1,5 +1,5 @@
 import { AppSidebar, AppNavbar } from '../components/AppLayout';
-import { useSpacetimeData } from '../spacetimeProvider';
+import { useSupabaseData } from '../supabaseProvider';
 import { useNavigate } from 'react-router-dom';
 
 export default function MatchHistory() {
@@ -7,9 +7,9 @@ export default function MatchHistory() {
   const localIdentity = localStorage.getItem('devduel_user_identity') || '';
 
   // Get all matches ordered by newest first
-  const allMatches = useSpacetimeData(db => 
-    Array.from(db.matchLog.iter())
-      .sort((a, b) => Number(b.timestamp) - Number(a.timestamp))
+  const allMatches = useSupabaseData(state => 
+    [...state.matches]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
   );
 
   return (
@@ -39,33 +39,33 @@ export default function MatchHistory() {
                 </thead>
                 <tbody className="text-sm">
                   {allMatches.map((match, idx) => {
-                    const isMyMatch = match.winnerId === localIdentity || match.loserId === localIdentity;
-                    const date = new Date(Number(match.timestamp)).toLocaleString();
+                    const isMyMatch = match.winner_id === localIdentity || match.loser_id === localIdentity;
+                    const date = new Date(match.created_at).toLocaleString();
                     
                     return (
                       <tr 
-                        key={match.matchId} 
+                        key={match.id} 
                         className={`border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors ${isMyMatch ? 'bg-primary/5' : ''}`}
                       >
-                        <td className="p-4 text-on-surface-variant truncate max-w-[120px]" title={match.matchId}>
-                          {match.matchId.substring(0, 12)}...
+                        <td className="p-4 text-on-surface-variant truncate max-w-[120px]" title={match.id}>
+                          {match.id.substring(0, 12)}...
                         </td>
                         <td className="p-4 text-center">
-                          <span className={`px-2 py-1 rounded text-xs font-bold ${match.winnerId === localIdentity ? 'bg-tertiary/20 text-tertiary' : 'bg-surface-container-high text-on-surface'}`}>
-                            {match.winnerId.substring(0,10)}
-                            {match.winnerId === localIdentity && ' (You)'}
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${match.winner_id === localIdentity ? 'bg-tertiary/20 text-tertiary' : 'bg-surface-container-high text-on-surface'}`}>
+                            {match.winner_id.substring(0,10)}
+                            {match.winner_id === localIdentity && ' (You)'}
                           </span>
                         </td>
                         <td className="p-4 text-center">
-                          <span className={`px-2 py-1 rounded text-xs font-bold ${match.loserId === localIdentity ? 'bg-error/20 text-error' : 'bg-surface-container-high text-on-surface'}`}>
-                            {match.loserId.substring(0,10)}
-                            {match.loserId === localIdentity && ' (You)'}
+                          <span className={`px-2 py-1 rounded text-xs font-bold ${match.loser_id === localIdentity ? 'bg-error/20 text-error' : 'bg-surface-container-high text-on-surface'}`}>
+                            {match.loser_id.substring(0,10)}
+                            {match.loser_id === localIdentity && ' (You)'}
                           </span>
                         </td>
                         <td className="p-4 text-on-surface-variant text-xs">{date}</td>
                         <td className="p-4 text-right">
                           <button 
-                            onClick={() => navigate(`/review/${match.matchId}`)}
+                            onClick={() => navigate(`/review/${match.id}`)}
                             className="bg-primary/10 text-primary hover:bg-primary hover:text-on-primary px-4 py-1.5 rounded-lg text-xs font-bold transition-all"
                           >
                             Review Tape

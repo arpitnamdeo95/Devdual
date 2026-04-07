@@ -3,8 +3,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import { socket } from '../socket';
+import { supabase } from '../supabaseClient';
 import QuestionSelector from '../components/QuestionSelector';
-import { useSpacetime } from '../spacetimeProvider';
+import { useSupabaseData } from '../supabaseProvider';
 import { Brain, Zap, AlertTriangle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 
 /* ─────────────────────────────────────────────── helpers ─── */
@@ -14,7 +15,6 @@ const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${Str
 export default function BattleArena() {
   const { roomId: urlRoomId } = useParams<{ roomId: string }>();
   const navigate    = useNavigate();
-  const conn = useSpacetime();
 
   /* ── actualRoomId: comes from socket 'match-found' event, NOT the URL
      URL stays '/arena/matchmaking' the whole time; real roomId is from server */
@@ -39,7 +39,19 @@ export default function BattleArena() {
   const [testResults, setTestResults]   = useState<any[]>([]);
   const [gameResult, setGameResult]     = useState<{won:boolean;message:string}|null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const myName = useRef(`Player_${Math.floor(Math.random() * 9000) + 1000}`);
+  
+  const authPlayer = useSupabaseData(state => state.authPlayer);
+  const players = useSupabaseData(state => state.players);
+  
+  const myName = useRef(localStorage.getItem('devduel_user_identity') || `Player_${Math.floor(Math.random() * 9000) + 1000}`);
+  
+  // Keep myName ref up-to-date with authPlayer
+  useEffect(() => {
+    if (authPlayer?.username) {
+      myName.current = authPlayer.username;
+      localStorage.setItem('devduel_user_identity', authPlayer.username);
+    }
+  }, [authPlayer]);
 
   /* ── AI Coach state ───────────────────────────────────────── */
   interface CoachHint {
@@ -113,7 +125,7 @@ export default function BattleArena() {
       setOppProgress(data.progress || 0);
     };
 
-    const onGameEnd = (data: any) => {
+    const onGameEnd = async (data: any) => {
       const won = data.winnerId === socket.id;
       setGameResult({ won, message: won ? '🏆 YOU WIN!' : '💀 YOU LOST' });
       sessionStorage.setItem('reviewData', JSON.stringify({
@@ -124,19 +136,35 @@ export default function BattleArena() {
       setPhase('ended');
 
       if (won && data.winnerIdentity && data.loserIdentity) {
-         conn?.reducers.endMatch({ 
-           matchId: actualRoomId.current, 
-           codeUpdates: JSON.stringify({ winningCode: data.winningCode, loserCode: data.loserCode }),
-           winnerId: data.winnerIdentity, 
-           loserId: data.loserIdentity 
-         });
-
-         setTimeout(() => {
-           if (timer >= 28 * 60) {
-              conn?.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'fast_solver' });
-           }
-           conn?.reducers.grantBadge({ userIdentity: data.winnerIdentity, badgeId: 'first_win' });
-         }, 500);
+          try {
+            const [{ data: winnerPlayer }, { data: loserPlayer }] = await Promise.all([
+              supabase.from('dd_players').select('id').eq('username', data.winnerIdentity).single(),
+              supabase.from('dd_players').select('id').eq('username', data.loserIdentity).single()
+            ]);
+            
+            if (winnerPlayer && loserPlayer) {
+              await supabase.from('dd_matches').insert({
+                room_id: actualRoomId.current,
+                winner_id: winnerPlayer.id,
+                loser_id: loserPlayer.id,
+                winner_code: data.winningCode,
+                loser_code: data.loserCode,
+                problem_title: data.problemDescription?.substring(0, 50) || 'Unknown',
+                difficulty: 'medium', // Assume medium or get from problem.difficulty
+                duration_sec: 1800 - timer
+              });
+              
+              // Increment wins for winner, losses for loser in dd_players
+              await supabase.rpc('update_match_stats', { winner_id: winnerPlayer.id, loser_id: loserPlayer.id });
+              
+              if (timer >= 28 * 60) {
+                 await supabase.from('dd_player_badges').insert({ player_id: winnerPlayer.id, badge_id: 'fast_solver' });
+              }
+              await supabase.from('dd_player_badges').insert({ player_id: winnerPlayer.id, badge_id: 'first_win' });
+            }
+          } catch (err) {
+            console.error('Failed to save match to Supabase:', err);
+          }
       }
     };
 
@@ -370,8 +398,8 @@ export default function BattleArena() {
                 {/* Stats row */}
                 <div className="flex justify-center gap-8">
                   {[
-                    { label: 'Players Online', val: '142' },
-                    { label: 'In Queue', val: '23' },
+                    { label: 'Players Online', val: `${Math.max(players.length, 1)}` },
+                    { label: 'In Queue', val: '1' },
                     { label: 'Avg Wait', val: '~12s' },
                   ].map(s => (
                     <div key={s.label} className="text-center">

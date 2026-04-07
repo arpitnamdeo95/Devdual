@@ -1,17 +1,17 @@
 import React from 'react';
 import { AppNavbar, AppSidebar } from '../components/AppLayout';
-import { useSpacetimeData } from '../spacetimeProvider';
+import { useSupabaseData } from '../supabaseProvider';
 
 export default function UserProfile() {
     const [isExporting, setIsExporting] = React.useState(false);
     const [isEditing, setIsEditing] = React.useState(false);
 
     const localIdentity = localStorage.getItem('devduel_user_identity') || '';
-    const myUser = useSpacetimeData(db => Array.from(db.user.iter()).find(u => u.identity === localIdentity));
-    const myLeaderboard = useSpacetimeData(db => Array.from(db.leaderboardEntry.iter()).find(l => l.userIdentity === localIdentity));
-    const allLeaderboard = useSpacetimeData(db => Array.from(db.leaderboardEntry.iter()).sort((a,b) => b.elo - a.elo));
+    const myUser = useSupabaseData(state => state.players.find(u => u.username === localIdentity));
+    const myLeaderboard = useSupabaseData(state => state.players.find(l => l.username === localIdentity));
+    const allLeaderboard = useSupabaseData(state => [...state.players].sort((a,b) => b.elo - a.elo));
     
-    const myRank = allLeaderboard.findIndex(l => l.userIdentity === localIdentity) + 1;
+    const myRank = allLeaderboard.findIndex(l => l.username === localIdentity) + 1;
     const totalPlayers = allLeaderboard.length;
     const winRate = myUser?.matchesPlayed ? Math.round((myUser.wins / myUser.matchesPlayed) * 100) : 0;
     const topPercent = totalPlayers ? Math.round((myRank / totalPlayers) * 100) : 100;

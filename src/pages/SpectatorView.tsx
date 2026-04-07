@@ -14,13 +14,6 @@ interface FloatingEmoji {
   x: number;   // 0-100 percent from left
 }
 
-const SEED_CHAT = [
-  { user: 'ZER0_DAY', message: 'NULL_POINTER is crushing it with the hash map approach', time: '2m' },
-  { user: 'GHOST_NET', message: 'CYBER_NINJA still has time, let them cook 🍳', time: '1m' },
-  { user: 'BYTE_ME', message: 'That edge case handling is clean', time: '30s' },
-  { user: 'DARK_NET', message: '🔥🔥🔥', time: '10s' },
-];
-
 export default function SpectatorView() {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
@@ -30,8 +23,8 @@ export default function SpectatorView() {
   const [timer, setTimer] = useState(30 * 60);
   const [status, setStatus] = useState<'IN_PROGRESS' | 'ENDED'>('IN_PROGRESS');
   const [winner, setWinner] = useState<string | null>(null);
-  const [spectatorCount, setSpectatorCount] = useState(Math.floor(Math.random() * 80) + 20);
-  const [recentActivity, setRecentActivity] = useState(SEED_CHAT);
+  const [spectatorCount, setSpectatorCount] = useState(0);
+  const [recentActivity, setRecentActivity] = useState<Array<{user: string, message: string, time: string}>>([]);
 
   /* ── Floating emoji state ── */
   const [floaters, setFloaters] = useState<FloatingEmoji[]>([]);

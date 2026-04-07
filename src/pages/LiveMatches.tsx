@@ -27,43 +27,9 @@ function fmt(sec: number) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-/* ── seed fake rooms for when no real battle is happening ── */
-const SEED_ROOMS: LiveRoom[] = [
-  {
-    roomId: 'demo_seed_1',
-    players: [{ name: 'null_yield', rating: 2842 }, { name: 'vortex_ops', rating: 2791 }],
-    spectatorCount: 47,
-    difficulty: 'hard',
-    problemTitle: 'LRU Cache',
-    status: 'battle',
-    startedAt: Date.now() - 780_000,
-    elapsedSec: 780,
-  },
-  {
-    roomId: 'demo_seed_2',
-    players: [{ name: 'stack_x', rating: 2740 }, { name: 'quantum_dev', rating: 2610 }],
-    spectatorCount: 23,
-    difficulty: 'medium',
-    problemTitle: 'Binary Search Tree',
-    status: 'battle',
-    startedAt: Date.now() - 420_000,
-    elapsedSec: 420,
-  },
-  {
-    roomId: 'demo_seed_3',
-    players: [{ name: 'kernel_master', rating: 2685 }, { name: 'ghost_net', rating: 2580 }],
-    spectatorCount: 9,
-    difficulty: 'easy',
-    problemTitle: 'Two Sum',
-    status: 'picking',
-    startedAt: Date.now() - 60_000,
-    elapsedSec: 60,
-  },
-];
-
 export default function LiveMatches() {
   const navigate = useNavigate();
-  const [rooms, setRooms] = useState<LiveRoom[]>(SEED_ROOMS);
+  const [rooms, setRooms] = useState<LiveRoom[]>([]);
   const [totalSpectators, setTotalSpectators] = useState(0);
   const [pulse, setPulse] = useState(false);
 
