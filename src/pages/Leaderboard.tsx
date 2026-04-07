@@ -93,7 +93,7 @@ export default function Leaderboard() {
       }, 3500);
     };
     socket.on('game-end', onGameEnd);
-    return () => socket.off('game-end', onGameEnd);
+    return () => { socket.off('game-end', onGameEnd); };
   }, []);
 
   const filtered = entries.filter(e =>
