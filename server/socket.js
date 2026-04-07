@@ -7,6 +7,11 @@
  *   code-update → opponent-code-update
  *   test-progress → opponent-progress
  *   submit-code → game-end
+ *
+ * Spectator flow:
+ *   get-live-rooms → live-rooms (list of active rooms)
+ *   join-room (isSpectator:true) → room-state
+ *   room-reaction → broadcast reaction float to room
  */
 
 const {
@@ -23,20 +28,42 @@ const queue = [];
  * rooms[roomId] = {
  *   players:        [{ id, name, rating }],
  *   code:           { [playerId]: string },
- *   spectators:     [socketId],
+ *   spectators:     Set<socketId>,
  *   selections:     { [playerId]: 'easy'|'medium'|'hard' },
  *   selectionTimer: TimeoutHandle | null,
  *   problem:        QuestionObject | null,
+ *   startedAt:      number (timestamp),
+ *   status:         'picking' | 'battle' | 'ended',
  * }
  */
 const rooms = {};
+
+// ── Helper — build the public live-rooms list ──────────────────────────────
+function getLiveRoomsList() {
+  return Object.entries(rooms)
+    .filter(([, room]) => room.status !== 'ended')
+    .map(([roomId, room]) => ({
+      roomId,
+      players: room.players.map(p => ({ name: p.name, rating: p.rating || 1500 })),
+      spectatorCount: room.spectators.size,
+      difficulty: room.problem?.difficulty || null,
+      problemTitle: room.problem?.title || null,
+      status: room.status,
+      startedAt: room.startedAt,
+      elapsedSec: Math.floor((Date.now() - room.startedAt) / 1000),
+    }));
+}
+
+// ── Helper — broadcast updated live-rooms to everyone watching ───────────────
+function broadcastLiveRooms(io) {
+  io.emit('live-rooms', getLiveRoomsList());
+}
 
 // ── Helper — resolve selections and broadcast final question ─────────────────
 function finalizeQuestion(roomId, io) {
   const room = rooms[roomId];
   if (!room) return;
 
-  // Clear auto-timer if it's still running
   if (room.selectionTimer) {
     clearTimeout(room.selectionTimer);
     room.selectionTimer = null;
@@ -49,9 +76,10 @@ function finalizeQuestion(roomId, io) {
   const problem    = getQuestionByDifficulty(difficulty);
 
   room.problem = problem;
+  room.status  = 'battle';
 
-  // Broadcast the final resolved question to everyone in the room
   io.to(roomId).emit('final-question', { difficulty, problem });
+  broadcastLiveRooms(io);
 
   console.log(`[Room ${roomId}] Final question: "${problem.title}" (${difficulty})`);
 }
@@ -60,6 +88,11 @@ function finalizeQuestion(roomId, io) {
 module.exports = function setupSockets(io) {
   io.on('connection', (socket) => {
     console.log(`[Connect] ${socket.id}`);
+
+    // ── Request current live rooms list ───────────────────────────────────────
+    socket.on('get-live-rooms', () => {
+      socket.emit('live-rooms', getLiveRoomsList());
+    });
 
     // ── Matchmaking ──────────────────────────────────────────────────────────
     socket.on('find-match', (userData) => {
@@ -74,42 +107,40 @@ module.exports = function setupSockets(io) {
         rooms[roomId] = {
           players:        [p1, p2],
           code:           {},
-          spectators:     [],
+          spectators:     new Set(),
           selections:     {},
           selectionTimer: null,
           problem:        null,
+          startedAt:      Date.now(),
+          status:         'picking',
         };
 
-        // Make both sockets actually join the room so they receive `io.to(roomId)` broadcasts
         const socket1 = io.sockets.sockets.get(p1.id);
         const socket2 = io.sockets.sockets.get(p2.id);
         if (socket1) socket1.join(roomId);
         if (socket2) socket2.join(roomId);
 
-        // Send match info WITHOUT a problem — question selection comes next
         io.to(p1.id).emit('match-found', { roomId, opponent: p2 });
         io.to(p2.id).emit('match-found', { roomId, opponent: p1 });
 
-        // Immediately send the 3 question options to both players
         const options = getQuestionOptions();
         io.to(p1.id).emit('question-options', { roomId, options });
         io.to(p2.id).emit('question-options', { roomId, options });
 
         console.log(`[Match] ${p1.id} vs ${p2.id} → room ${roomId}`);
 
-        // Auto-finalize after timeout (handles non-responsive players)
+        // Broadcast new room to live lobby watchers
+        broadcastLiveRooms(io);
+
         rooms[roomId].selectionTimer = setTimeout(() => {
           const room = rooms[roomId];
-          if (!room || room.problem) return; // already finalized
+          if (!room || room.problem) return;
 
           console.log(`[Timeout] Room ${roomId} — auto-finalizing question`);
-
-          // Auto-assign random difficulty to any player who hasn't chosen
           const difficulties = ['easy', 'medium', 'hard'];
           [p1, p2].forEach((p) => {
             if (!room.selections[p.id]) {
               room.selections[p.id] = difficulties[Math.floor(Math.random() * 3)];
-              console.log(`[Timeout] Auto-selected "${room.selections[p.id]}" for ${p.id}`);
             }
           });
 
@@ -120,7 +151,6 @@ module.exports = function setupSockets(io) {
 
     // ── Cancel Matchmaking ───────────────────────────────────────────────────
     socket.on('cancel-match', () => {
-      console.log(`[Queue] ${socket.id} cancelled matchmaking`);
       const qIdx = queue.findIndex((u) => u.id === socket.id);
       if (qIdx !== -1) queue.splice(qIdx, 1);
     });
@@ -128,46 +158,41 @@ module.exports = function setupSockets(io) {
     // ── Player selects a difficulty ──────────────────────────────────────────
     socket.on('player-selected', ({ roomId, difficulty }) => {
       const room = rooms[roomId];
-      if (!room || room.problem) return; // ignore if already finalized or room gone
+      if (!room || room.problem) return;
 
       const validDifficulties = ['easy', 'medium', 'hard'];
       if (!validDifficulties.includes(difficulty)) return;
 
-      // Prevent re-selection
-      if (room.selections[socket.id]) {
-        console.log(`[Select] ${socket.id} tried to re-select — ignored`);
-        return;
-      }
+      if (room.selections[socket.id]) return;
 
       room.selections[socket.id] = difficulty;
-      console.log(`[Select] ${socket.id} chose "${difficulty}" in room ${roomId}`);
-
-      // Notify the OPPONENT that this player has selected (without revealing choice)
       socket.to(roomId).emit('opponent-selected', { playerId: socket.id });
 
-      // If BOTH players have now selected → finalize immediately
       const [p1, p2] = room.players;
       if (room.selections[p1?.id] && room.selections[p2?.id]) {
         finalizeQuestion(roomId, io);
       }
     });
 
-    // ── Join room (used by BattleArena on mount or spectators) ───────────────
+    // ── Join room (BattleArena players or spectators) ───────────────────────
     socket.on('join-room', ({ roomId, isSpectator }) => {
       socket.join(roomId);
-      console.log(`[Join] ${socket.id} → room ${roomId} (spectator: ${isSpectator})`);
 
       const room = rooms[roomId];
       if (!room) return;
 
-      if (isSpectator) room.spectators.push(socket.id);
+      if (isSpectator) {
+        room.spectators.add(socket.id);
+        broadcastLiveRooms(io); // Update spectator count globally
+      }
 
-      // Send current room state (problem may be null if still in selection phase)
       socket.emit('room-state', {
         players: room.players,
         problem: room.problem,
         code:    room.code,
       });
+
+      console.log(`[Join] ${socket.id} → room ${roomId} (spectator: ${isSpectator})`);
     });
 
     // ── Live code sync ───────────────────────────────────────────────────────
@@ -193,34 +218,49 @@ module.exports = function setupSockets(io) {
         const player = room.players.find(p => p.id === socket.id);
         if (player && player.name) userName = player.name;
       }
-      // Emit to the opponent that a powerup was used against them
       socket.to(roomId).emit('powerup-activated', { type, userId: socket.id, userName });
-      console.log(`[Powerup] ${userName} (${socket.id}) used ${type} in room ${roomId}`);
     });
 
-    // ── Solution submitted — declare a winner ────────────────────────────────
+    // ── Emoji reaction from spectators ───────────────────────────────────────
+    socket.on('room-reaction', ({ roomId, emoji }) => {
+      const validEmojis = ['🔥', '⚡', '🎯', '👏', '💀', '🚀', '😱', '🤯'];
+      if (!validEmojis.includes(emoji)) return;
+      // Broadcast reaction to everyone watching the room (players + spectators)
+      io.to(roomId).emit('room-reaction', {
+        emoji,
+        id: `${socket.id}_${Date.now()}`,
+      });
+    });
+
+    // ── Solution submitted — declare winner ──────────────────────────────────
     socket.on('submit-code', ({ roomId, code }) => {
       const room = rooms[roomId];
       if (!room) return;
 
-      // Record the winning code
       room.code[socket.id] = code;
 
-      // Identify the opponent
       const [p1, p2] = room.players || [];
-      const winner = p1?.id === socket.id ? p1 : p2;
-      const loser = p1?.id === socket.id ? p2 : p1;
-      const opponentId = loser?.id;
-      const loserCode = opponentId ? (room.code[opponentId] || '# No code submitted') : '';
+      const winner   = p1?.id === socket.id ? p1 : p2;
+      const loser    = p1?.id === socket.id ? p2 : p1;
+      const loserCode = loser?.id ? (room.code[loser.id] || '# No code submitted') : '';
+
+      room.status = 'ended';
 
       io.to(roomId).emit('game-end', {
-        winnerId:    socket.id,
-        winnerIdentity: winner?.identity,
-        loserIdentity: loser?.identity,
-        winningCode: code,
-        loserCode:   loserCode,
-        problemDescription: room.problem?.description || ''
+        winnerId:           socket.id,
+        winnerName:         winner?.name,
+        winnerIdentity:     winner?.identity,
+        loserIdentity:      loser?.identity,
+        winningCode:        code,
+        loserCode,
+        problemDescription: room.problem?.description || '',
       });
+
+      // Remove from live rooms after short delay (give spectators time to see result)
+      setTimeout(() => {
+        delete rooms[roomId];
+        broadcastLiveRooms(io);
+      }, 15000);
 
       console.log(`[Win] ${socket.id} won room ${roomId}`);
     });
@@ -229,26 +269,27 @@ module.exports = function setupSockets(io) {
     socket.on('disconnect', () => {
       console.log(`[Disconnect] ${socket.id}`);
 
-      // Remove from queue if still waiting
       const qIdx = queue.findIndex((u) => u.id === socket.id);
       if (qIdx !== -1) queue.splice(qIdx, 1);
 
-      // Notify opponent in any active room
       for (const [roomId, room] of Object.entries(rooms)) {
         const wasPlayer = room.players.some((p) => p.id === socket.id);
         if (wasPlayer) {
           socket.to(roomId).emit('opponent-disconnected');
-
-          // Clean up the auto-selection timer to avoid memory leaks
-          if (room.selectionTimer) {
-            clearTimeout(room.selectionTimer);
-          }
-
-          // Optionally delete the room — or keep it for spectators
+          if (room.selectionTimer) clearTimeout(room.selectionTimer);
           delete rooms[roomId];
+          broadcastLiveRooms(io);
           console.log(`[Room] ${roomId} closed due to disconnect`);
         }
+
+        // Remove from spectator set
+        room.spectators.delete(socket.id);
       }
+    });
+
+    // ── Chat messaging ───────────────────────────────────────────────────────
+    socket.on('chat-message', ({ roomId, message, user }) => {
+      io.to(roomId).emit('chat-message', { user, message, time: 'now' });
     });
   });
 };

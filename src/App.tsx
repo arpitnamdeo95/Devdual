@@ -15,6 +15,7 @@ import MatchHistory from './pages/MatchHistory';
 import Leaderboard from './pages/Leaderboard';
 import BossSelection from './pages/BossSelection';
 import BossArena from './pages/BossArena';
+import LiveMatches from './pages/LiveMatches';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
             <Route path="/arena/hypergraph" element={<HypergraphArena />} />
             <Route path="/arena/:roomId" element={<BattleArena />} />
             <Route path="/watch/:roomId" element={<SpectatorView />} />
+            <Route path="/live" element={<LiveMatches />} />
             <Route path="/review/:matchId" element={<AIReview />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/hypergraph" element={<HypergraphArena />} />
